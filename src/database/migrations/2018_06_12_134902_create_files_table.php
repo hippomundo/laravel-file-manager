@@ -13,20 +13,22 @@ class CreateFilesTable extends Migration
      */
     public function up()
     {
-        Schema::create('files', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('path')->nullable();
-            $table->string('url')->nullable();
-            $table->string('folder_path')->nullable();
-            $table->string('original_name')->nullable();
-            $table->string('extension', 20)->nullable();
-            $table->string('hash')->unique('hash')->index('hash')->nullable();
-            $table->string('storage', 100)->nullable();
-            $table->string('type', 100)->nullable();
-            // bytes
-            $table->integer('file_size')->nullable();
-            $table->timestamps();
-        });
+        if (Schema::hasTable('files')) {
+            Schema::create('files', function (Blueprint $table) {
+                $table->increments('id');
+                $table->string('path')->nullable();
+                $table->string('url')->nullable();
+                $table->string('folder_path')->nullable();
+                $table->string('original_name')->nullable();
+                $table->string('extension', 20)->nullable();
+                $table->string('hash')->unique('hash')->index('hash')->nullable();
+                $table->string('storage', 100)->nullable();
+                $table->string('type', 100)->nullable();
+                // bytes
+                $table->integer('file_size')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
