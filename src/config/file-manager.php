@@ -14,6 +14,14 @@ return [
     |--------------------------------------------------------------------------
     | Media configurations
     |--------------------------------------------------------------------------
+    |
+    | Directory is the folder that goes after main 'folder', 'files/{directory}'.
+    | Image size is the size of big image (has no impact on original image).
+    | Thumbnail size is size of thumbnail.
+    | Update file names on change (rotate, resize) in order to reset browser's
+    | cache. We would need to rename thumbnail and image so we will see image
+    | changes immediately.
+    |
     */
 
     'media' => [
@@ -22,7 +30,7 @@ return [
             "directory"                   => "media",
             "image_size"                  => 500,
             "thumbnail"                   => ["width" => 250, "height" => 250],
-            "change_file_names_on_resize" => true
+            "update_file_names_on_change" => true
         ]
 
     ],
@@ -32,6 +40,7 @@ return [
     | Video configurations
     |--------------------------------------------------------------------------
     |
+    | Directory is the folder that goes after main 'folder', 'files/{directory}'.
     | Resize will work only if the HandBrake package installed on your server:
     | https://handbrake.fr/docs/en/1.1.0/get-handbrake/download-and-install.html
     |
@@ -50,6 +59,9 @@ return [
     |--------------------------------------------------------------------------
     | Files configurations
     |--------------------------------------------------------------------------
+    |
+    | Directory is the folder that goes after main 'folder', 'files/{directory}'.
+    |
     */
 
     'files' => [

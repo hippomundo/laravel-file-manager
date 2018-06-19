@@ -35,9 +35,10 @@ interface Manager
 
     /**
      * @param Mediable $model
-     * @return Media
+     * @param $value
+     * @return Mediable
      */
-    public function rotate(Mediable $model);
+    public function rotate(Mediable $model, $value);
 
     /**
      * @param Mediable|Model $model

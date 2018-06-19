@@ -47,9 +47,10 @@ class Manager implements ManagerContract
 
     /**
      * @param Mediable $model
+     * @param $value
      * @return Media
      */
-    public function rotate(Mediable $model)
+    public function rotate(Mediable $model, $value)
     {
 
     }

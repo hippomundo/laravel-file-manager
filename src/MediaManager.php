@@ -95,7 +95,7 @@ class MediaManager extends BaseManager
 
             $this->saveImageFile($model->thumbnail_path, $resized);
 
-            if (Arr::get($this->config, 'change_names_on_resize', false)) {
+            if ($this->updateNamesOnChange()) {
                 return $this->updateFileNames($model);
             }
 
@@ -103,6 +103,14 @@ class MediaManager extends BaseManager
         }
 
         throw new FileManagerException('Original file does not exists');
+    }
+
+    /**
+     * @return mixed
+     */
+    protected function updateNamesOnChange()
+    {
+        return Arr::get($this->config, 'update_names_on_change', false);
     }
 
     /**
@@ -124,6 +132,77 @@ class MediaManager extends BaseManager
         $model->update(compact('path', 'thumbnail_path', 'url', 'thumbnail_url'));
 
         return $model;
+    }
+
+    /**
+     * @param Mediable|Media $model
+     * @param $value
+     * @return Mediable
+     * @throws FileManagerException
+     * @throws \Exception
+     */
+    public function rotate(Mediable $model, $value)
+    {
+        if ($this->isSvg($model->original_path)) {
+            return $model;
+        }
+
+        $this->rotatePath($model->path, $value);
+        $this->rotatePath($model->thumbnail_path, $value);
+
+        if ($this->updateNamesOnChange()) {
+            return $this->updateFileNames($model);
+        }
+
+        return $model;
+    }
+
+    /**
+     * @param $path
+     * @param $value
+     * @return bool
+     * @throws \Exception
+     */
+    public function rotatePath($path, $value)
+    {
+        if (Storage::exists($path)) {
+
+            $image = new ImageManager();
+
+            $contents = ( string )$image->make($path)->rotate($this->rotationValue($value))->encode();
+
+            Storage::delete($path);
+
+            $this->saveImageFile($path, $contents);
+
+            return $path;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $value
+     * @return int
+     */
+    protected function rotationValue($value)
+    {
+        if (!is_numeric($value) && is_string($value)) {
+            switch ($value) {
+                case 'right':
+                    $value = 270;
+                    break;
+                case 'left':
+                    $value = 90;
+                    break;
+                case 'turn':
+                case 'roll':
+                    $value = 180;
+                    break;
+            }
+        }
+
+        return $value;
     }
 
     /**
