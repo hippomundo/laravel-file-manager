@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use RGilyov\FileManager\Interfaces\Mediable;
 
+/**
+ * Class Media
+ * @package RGilyov\FileManager\Models
+ */
 class Media extends Model implements Mediable
 {
     /**
@@ -28,7 +32,7 @@ class Media extends Model implements Mediable
         "thumbnail_url",
         "status",
         'folder_path',
-        'origin_name',
+        'original_name',
         'extension',
         'hash'
     ];

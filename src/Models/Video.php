@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use RGilyov\FileManager\Interfaces\Mediable;
 
+/**
+ * Class Video
+ * @package RGilyov\FileManager\Models
+ */
 class Video extends Model implements Mediable
 {
     /**
@@ -23,7 +27,7 @@ class Video extends Model implements Mediable
         'thumbnail_url',
         "file_size",
         'folder_path',
-        'origin_name',
+        'original_name',
         'extension',
         'hash',
         'storage',
@@ -51,10 +55,29 @@ class Video extends Model implements Mediable
     /**
      * @return void
      */
-    public function deleteFile()
+    public function deleteVideo()
     {
         if (Storage::exists($this->path)) {
             Storage::delete($this->path);
         }
+    }
+
+    /**
+     * @return void
+     */
+    public function deleteOriginal()
+    {
+        if (Storage::exists($this->original_path)) {
+            Storage::delete($this->original_path);
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function deleteFile()
+    {
+        $this->deleteVideo();
+        $this->deleteOriginal();
     }
 }

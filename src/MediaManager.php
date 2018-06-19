@@ -46,10 +46,10 @@ class MediaManager extends BaseManager
         $thumbnail_path = $this->saveThumbnail($file);
         $thumbnail_url  = $this->pathToUrl($thumbnail_path);
         $folder_path    = $this->mainFolder();
-        $origin_name    = $this->originalName($file);
+        $original_name  = $this->originalName($file);
         $storage        = $this->getStorageName();
         $extension      = $this->extension($file);
-        $hash           = $this->makeHash($origin_name);
+        $hash           = $this->makeHash($original_name);
         $original_path  = $this->moveOriginal($file);
         $original_url   = $this->pathToUrl($original_path);
 
@@ -63,7 +63,7 @@ class MediaManager extends BaseManager
             'original_path',
             'original_url',
             'folder_path',
-            'origin_name',
+            'original_name',
             'storage',
             'extension',
             'hash'
@@ -79,30 +79,28 @@ class MediaManager extends BaseManager
      */
     public function resize(Mediable $model, $imageSizes = null, $thumbnailSizes = null)
     {
-        $imageSizes     = $imageSizes ? $imageSizes : Arr::get($this->config, 'image_size', 500);
-        $thumbnailSizes = $thumbnailSizes ? $thumbnailSizes : Arr::get($this->config, 'thumbnail', 250);
+        $this->checkOriginal($model->original_path);
 
-        if (Storage::exists($model->original_path)) {
-            $resized = $this->resizeFile($model->original_path, $imageSizes);
+        $imageSizes     = $imageSizes ? $imageSizes : $this->getImageSizes();
+        $thumbnailSizes = $thumbnailSizes ? $thumbnailSizes : $this->getThumbnailSizes();
 
-            $model->deleteImage();
+        $resized = $this->resizeFile($model->original_path, $imageSizes);
 
-            $this->saveImageFile($model->path, $resized);
+        $model->deleteImage();
 
-            $resized = $this->resizeFile($model->original_path, $thumbnailSizes);
+        $this->saveImageFile($model->path, $resized);
 
-            $model->deleteThumbnail();
+        $resized = $this->resizeFile($model->original_path, $thumbnailSizes);
 
-            $this->saveImageFile($model->thumbnail_path, $resized);
+        $model->deleteThumbnail();
 
-            if ($this->updateNamesOnChange()) {
-                return $this->updateFileNames($model);
-            }
+        $this->saveImageFile($model->thumbnail_path, $resized);
 
-            return $model;
+        if ($this->updateNamesOnChange()) {
+            return $this->updateFileNames($model);
         }
 
-        throw new FileManagerException('Original file does not exists');
+        return $model;
     }
 
     /**
@@ -111,6 +109,22 @@ class MediaManager extends BaseManager
     protected function updateNamesOnChange()
     {
         return Arr::get($this->config, 'update_names_on_change', false);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getThumbnailSizes()
+    {
+        return Arr::get($this->config, 'thumbnail', 250);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getImageSizes()
+    {
+        return Arr::get($this->config, 'image_size', 500);
     }
 
     /**
@@ -171,7 +185,7 @@ class MediaManager extends BaseManager
 
             $contents = ( string )$image->make($path)->rotate($this->rotationValue($value))->encode();
 
-            Storage::delete($path);
+            $this->deleteFile($path);
 
             $this->saveImageFile($path, $contents);
 
@@ -221,7 +235,7 @@ class MediaManager extends BaseManager
      */
     protected function saveImage($file)
     {
-        $sizes = Arr::get($this->config, 'image_size', 500);
+        $sizes = $this->getImageSizes();
 
         return $this->resizeAndSave($file, $sizes);
     }
@@ -233,7 +247,7 @@ class MediaManager extends BaseManager
      */
     protected function saveThumbnail($file)
     {
-        $sizes = Arr::get($this->config, 'thumbnail', 250);
+        $sizes = $this->getThumbnailSizes();
 
         return $this->resizeAndSave($file, $sizes);
     }

@@ -275,6 +275,26 @@ abstract class BaseManager
     }
 
     /**
+     * @param $path
+     * @throws FileManagerException
+     */
+    public function checkOriginal($path)
+    {
+        if (! Storage::exists($path)) {
+            throw new FileManagerException('Original file does not exists');
+        }
+    }
+
+    /**
+     * @param $path
+     * @return string
+     */
+    public function fullPath($path)
+    {
+        return $this->glueDirParts(Storage::disk()->getDriver()->getAdapter()->getPathPrefix(), $path);
+    }
+
+    /**
      * @param UploadedFile $file
      * @return $this|\Illuminate\Database\Eloquent\Model
      * @throws FileManagerException
@@ -302,6 +322,19 @@ abstract class BaseManager
         $model->deleteFile();
 
         return $model->update($this->saveFile($file));
+    }
+
+    /**
+     * @param $path
+     * @return bool
+     */
+    public function deleteFile($path)
+    {
+        if (Storage::exists($path)) {
+            return Storage::delete($path);
+        }
+
+        return false;
     }
 
     /**
