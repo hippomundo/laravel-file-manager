@@ -12,9 +12,9 @@ use \RGilyov\FileManager\Interfaces\Manager as ManagerContract;
 
 class Manager implements ManagerContract
 {
-    public function __construct($resolve)
+    public function __construct(BaseManager $manager)
     {
-
+        
     }
 
     /**
