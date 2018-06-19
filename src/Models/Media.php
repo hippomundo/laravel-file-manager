@@ -63,18 +63,40 @@ class Media extends Model implements Mediable
     /**
      * @return void
      */
-    public function deleteFile()
+    public function deleteImage()
+    {
+        if (Storage::exists($this->path)) {
+            Storage::delete($this->path);
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function deleteThumbnail()
+    {
+        if (Storage::exists($this->thumbnail_path)) {
+            Storage::delete($this->thumbnail_path);
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function deleteOriginal()
     {
         if (Storage::exists($this->original_path)) {
             Storage::delete($this->original_path);
         }
+    }
 
-        if (Storage::exists($this->path)) {
-            Storage::delete($this->path);
-        }
-
-        if (Storage::exists($this->thumbnail_path)) {
-            Storage::delete($this->thumbnail_path);
-        }
+    /**
+     * @return void
+     */
+    public function deleteFile()
+    {
+        $this->deleteOriginal();
+        $this->deleteImage();
+        $this->deleteThumbnail();
     }
 }

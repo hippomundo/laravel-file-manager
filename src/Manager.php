@@ -56,9 +56,10 @@ class Manager implements ManagerContract
 
     /**
      * @param Mediable $model
-     * @return Mediable|Model
+     * @param array ...$sizes
+     * @return Model
      */
-    public function resize(Mediable $model)
+    public function resize(Mediable $model, ...$sizes)
     {
 
     }

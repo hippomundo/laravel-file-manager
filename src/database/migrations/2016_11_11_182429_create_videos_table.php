@@ -15,9 +15,11 @@ class CreateVideosTable extends Migration
     {
         Schema::create('videos', function (Blueprint $table) {
             $table->increments('id');
+            $table->string('original_path')->nullable();
+            $table->string('original_url')->nullable();
             $table->string('path')->nullable();
-            $table->string('thumbnail_path')->nullable();
             $table->string('url')->nullable();
+            $table->string('thumbnail_path')->nullable();
             $table->string('thumbnail_url')->nullable();
             $table->string('folder_path')->nullable();
             $table->string('origin_name')->nullable();

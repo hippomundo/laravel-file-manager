@@ -169,6 +169,10 @@ abstract class BaseManager
      */
     public function fileName($path)
     {
+        if ($path instanceof UploadedFile) {
+            $path = $this->originalName($path);
+        }
+
         return pathinfo($path, PATHINFO_FILENAME);
     }
 
@@ -178,6 +182,10 @@ abstract class BaseManager
      */
     public function baseName($path)
     {
+        if ($path instanceof UploadedFile) {
+            $path = $this->originalName($path);
+        }
+
         return pathinfo($path, PATHINFO_BASENAME);
     }
 
@@ -187,6 +195,10 @@ abstract class BaseManager
      */
     public function extension($path)
     {
+        if ($path instanceof UploadedFile) {
+            return $path->extension();
+        }
+
         return pathinfo($path, PATHINFO_EXTENSION);
     }
 
@@ -211,20 +223,96 @@ abstract class BaseManager
     }
 
     /**
-     * @param UploadedFile $file
-     * @param null $prefix
+     * @param $file
      * @return string
      */
-    public function generateUniquePath(UploadedFile $file, $prefix = null)
+    public function generateUniquePath($file)
     {
-        $name = $prefix . "_" . Str::slug(Str::random(), '_') . "." . $file->extension();
+        $name = Str::slug(Str::random(), '_') . "." . $this->extension($file);
 
         $path = $this->glueDirParts($this->mainFolder(), $name);
 
         if (Storage::exists($path)) {
-            return $this->generateUniquePath($file, $prefix);
+            return $this->generateUniquePath($file);
         }
 
         return $path;
+    }
+
+    /**
+     * @param $path
+     * @return string
+     */
+    public function generateUniquePathFromExisting($path)
+    {
+        $baseName  = $this->baseName($path);
+        $extension = $this->extension($path);
+
+        $name = Str::slug(Str::random(), '_') . "." . $extension;
+
+        $uniquePath = $this->glueDirParts($baseName, $name);
+
+        if (Storage::exists($uniquePath)) {
+            return $this->generateUniquePathFromExisting($uniquePath);
+        }
+
+        return $uniquePath;
+    }
+
+    /**
+     * @param $path
+     * @param $newPath
+     * @return mixed
+     * @throws FileManagerException
+     */
+    public function renameFile($path, $newPath)
+    {
+        if (Storage::exists($path)) {
+            return Storage::move($path, $newPath);
+        }
+
+        throw new FileManagerException('Was not able to rename the file, it does not exists.');
+    }
+
+    /**
+     * @param UploadedFile $file
+     * @return $this|\Illuminate\Database\Eloquent\Model
+     * @throws FileManagerException
+     */
+    public function create(UploadedFile $file)
+    {
+        return $this->model->create($this->saveFile($file));
+    }
+
+    /**
+     * @param UploadedFile $file
+     * @return array
+     * @throws FileManagerException
+     */
+    abstract protected function saveFile(UploadedFile $file);
+
+    /**
+     * @param UploadedFile $file
+     * @param Mediable|Model $model
+     * @return bool
+     * @throws FileManagerException
+     */
+    public function update(UploadedFile $file, Mediable $model)
+    {
+        $model->deleteFile();
+
+        return $model->update($this->saveFile($file));
+    }
+
+    /**
+     * @param Mediable|Model $model
+     * @return mixed
+     * @throws \Exception
+     */
+    public function delete(Mediable $model)
+    {
+        $model->deleteFile();
+
+        return $model->delete();
     }
 }

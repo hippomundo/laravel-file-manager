@@ -19,9 +19,10 @@ return [
     'media' => [
 
         'default' => [
-            "directory" => "media",
-            "max_size"  => 500,
-            "thumbnail" => ["width" => 250, "height" => 250]
+            "directory"                   => "media",
+            "image_size"                  => 500,
+            "thumbnail"                   => ["width" => 250, "height" => 250],
+            "change_file_names_on_resize" => true
         ]
 
     ],

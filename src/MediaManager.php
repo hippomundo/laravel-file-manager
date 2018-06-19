@@ -7,6 +7,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManager;
+use RGilyov\FileManager\Interfaces\Mediable;
 use RGilyov\FileManager\Models\Media;
 
 /**
@@ -33,10 +34,10 @@ class MediaManager extends BaseManager
 
     /**
      * @param UploadedFile $file
-     * @return $this|\Illuminate\Database\Eloquent\Model
+     * @return array
      * @throws FileManagerException
      */
-    public function create(UploadedFile $file)
+    protected function saveFile(UploadedFile $file)
     {
         $type           = $file->getMimeType();
         $file_size      = $file->getClientSize();
@@ -47,12 +48,12 @@ class MediaManager extends BaseManager
         $folder_path    = $this->mainFolder();
         $origin_name    = $this->originalName($file);
         $storage        = $this->getStorageName();
-        $extension      = $file->extension();
+        $extension      = $this->extension($file);
         $hash           = $this->makeHash($origin_name);
         $original_path  = $this->moveOriginal($file);
         $original_url   = $this->pathToUrl($original_path);
 
-        return $this->model->create(compact(
+        return compact(
             'type',
             'file_size',
             'path',
@@ -66,7 +67,63 @@ class MediaManager extends BaseManager
             'storage',
             'extension',
             'hash'
-        ));
+        );
+    }
+
+    /**
+     * @param Mediable|Media $model
+     * @param null $imageSizes
+     * @param null $thumbnailSizes
+     * @return Mediable
+     * @throws FileManagerException
+     */
+    public function resize(Mediable $model, $imageSizes = null, $thumbnailSizes = null)
+    {
+        $imageSizes     = $imageSizes ? $imageSizes : Arr::get($this->config, 'image_size', 500);
+        $thumbnailSizes = $thumbnailSizes ? $thumbnailSizes : Arr::get($this->config, 'thumbnail', 250);
+
+        if (Storage::exists($model->original_path)) {
+            $resized = $this->resizeFile($model->original_path, $imageSizes);
+
+            $model->deleteImage();
+
+            $this->saveImageFile($model->path, $resized);
+
+            $resized = $this->resizeFile($model->original_path, $thumbnailSizes);
+
+            $model->deleteThumbnail();
+
+            $this->saveImageFile($model->thumbnail_path, $resized);
+
+            if (Arr::get($this->config, 'change_names_on_resize', false)) {
+                return $this->updateFileNames($model);
+            }
+
+            return $model;
+        }
+
+        throw new FileManagerException('Original file does not exists');
+    }
+
+    /**
+     * @param Mediable|Media $model
+     * @return Mediable
+     * @throws FileManagerException
+     */
+    public function updateFileNames(Mediable $model)
+    {
+        $path           = $this->generateUniquePathFromExisting($model->path);
+        $thumbnail_path = $this->generateUniquePathFromExisting($model->thumbnail_path);
+
+        $this->renameFile($model->path, $path);
+        $this->renameFile($model->thumbnail_path, $thumbnail_path);
+
+        $url           = $this->pathToUrl($path);
+        $thumbnail_url = $this->pathToUrl($thumbnail_path);
+
+        $model->update(compact('path', 'thumbnail_path', 'url', 'thumbnail_url'));
+
+        return $model;
     }
 
     /**
@@ -75,9 +132,7 @@ class MediaManager extends BaseManager
      */
     public function isSvg($file)
     {
-        $path = ($file instanceof UploadedFile) ? $file->getClientOriginalName() : $file;
-
-        return strcasecmp($this->extension($path), 'svg') === 0;
+        return strcasecmp($this->extension($file), 'svg') === 0;
     }
 
     /**
@@ -87,15 +142,9 @@ class MediaManager extends BaseManager
      */
     protected function saveImage($file)
     {
-        $path = $this->generateUniquePath($file);
+        $sizes = Arr::get($this->config, 'image_size', 500);
 
-        $max_width = Arr::get($this->config, 'max_size', 500);
-
-        $resized = $this->resize($file, $max_width);
-
-        $this->saveImageFile($path, $resized);
-
-        return $path;
+        return $this->resizeAndSave($file, $sizes);
     }
 
     /**
@@ -105,13 +154,22 @@ class MediaManager extends BaseManager
      */
     protected function saveThumbnail($file)
     {
+        $sizes = Arr::get($this->config, 'thumbnail', 250);
+
+        return $this->resizeAndSave($file, $sizes);
+    }
+
+    /**
+     * @param $file
+     * @param $sizes
+     * @return string
+     * @throws FileManagerException
+     */
+    protected function resizeAndSave($file, $sizes)
+    {
         $path = $this->generateUniquePath($file);
 
-        $width = Arr::get($this->config, 'thumbnail.width', 250);
-
-        $height = Arr::get($this->config, 'thumbnail.height', 250);
-
-        $resized = $this->resize($file, $width, $height);
+        $resized = $this->resizeFile($file, $sizes);
 
         $this->saveImageFile($path, $resized);
 
@@ -132,12 +190,19 @@ class MediaManager extends BaseManager
 
     /**
      * @param $file
-     * @param null $width
-     * @param null $height
+     * @param null $sizes
      * @return string
      */
-    protected function resize($file, $width = null, $height = null)
+    protected function resizeFile($file, $sizes = null)
     {
+        if (is_array($sizes)) {
+            $width  = Arr::get($sizes, 'width', null);
+            $height = Arr::get($sizes, 'height', null);
+        } else {
+            $width  = ( int )$sizes;
+            $height = null;
+        }
+
         if ($this->isSvg($file)) {
             return File::get($file);
         } else {
