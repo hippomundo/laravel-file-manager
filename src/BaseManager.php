@@ -8,12 +8,13 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use RGilyov\FileManager\Interfaces\Mediable;
+use \RGilyov\FileManager\Interfaces\Manager as ManagerContract;
 
 /**
  * Class BaseManager
  * @package RGilyov\FileManager
  */
-abstract class BaseManager
+abstract class BaseManager implements ManagerContract
 {
     /**
      * @var string
@@ -76,12 +77,12 @@ abstract class BaseManager
     }
 
     /**
-     * @param $folderName
+     * @param string $folderName
      * @return $this
      */
     public function setPreFolder($folderName)
     {
-        $this->preFolder = is_string($folderName) ? $folderName : '';
+        $this->preFolder = $folderName;
 
         return $this;
     }
