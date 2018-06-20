@@ -349,4 +349,24 @@ abstract class BaseManager implements ManagerContract
 
         return $model->delete();
     }
+
+    /**
+     * @param Mediable $model
+     * @param $value
+     * @return Mediable
+     */
+    public function rotate(Mediable $model, $value)
+    {
+        return $model;
+    }
+
+    /**
+     * @param Mediable $model
+     * @param array ...$sizes
+     * @return Model|Mediable
+     */
+    public function resize(Mediable $model, ...$sizes)
+    {
+        return $model;
+    }
 }

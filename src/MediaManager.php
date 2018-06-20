@@ -72,14 +72,16 @@ class MediaManager extends BaseManager
 
     /**
      * @param Mediable|Media $model
-     * @param null $imageSizes
-     * @param null $thumbnailSizes
-     * @return Mediable
+     * @param array ...$sizes
+     * @return \Illuminate\Database\Eloquent\Model|Mediable
      * @throws FileManagerException
      */
-    public function resize(Mediable $model, $imageSizes = null, $thumbnailSizes = null)
+    public function resize(Mediable $model, ...$sizes)
     {
         $this->checkOriginal($model->original_path);
+
+        $imageSizes     = Arr::get($sizes, 0);
+        $thumbnailSizes = Arr::get($sizes, 1);
 
         $imageSizes     = $imageSizes ? $imageSizes : $this->getImageSizes();
         $thumbnailSizes = $thumbnailSizes ? $thumbnailSizes : $this->getThumbnailSizes();
