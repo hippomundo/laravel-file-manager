@@ -276,6 +276,19 @@ trait MediaTrait
      */
     protected function saveFile(UploadedFile $file, $relation, $folder)
     {
+        $manager = $this->getFileManager($relation, $folder);
+
+        return $manager->create($file);
+    }
+
+    /**
+     * @param $relation
+     * @param $folder
+     * @return \RGilyov\FileManager\FileManager|\RGilyov\FileManager\MediaManager|\RGilyov\FileManager\VideoManager
+     * @throws \RGilyov\FileManager\FileManagerException
+     */
+    protected function getFileManager($relation, $folder)
+    {
         $config = $this->fileManagerConfig();
 
         $manager = ManagerFactory::get($relation);
@@ -286,7 +299,7 @@ trait MediaTrait
             $manager->setConfig($config);
         }
 
-        return $manager->create($file);
+        return $manager;
     }
 
     /**
