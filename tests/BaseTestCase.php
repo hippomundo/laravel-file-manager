@@ -1,12 +1,14 @@
 <?php
 
-namespace RGilyov\FileManage\Test;
+namespace RGilyov\FileManager\Test;
 
+use Illuminate\Http\UploadedFile;
 use Orchestra\Testbench\TestCase;
 use RGilyov\FileManager\Models\File;
 use RGilyov\FileManager\Models\Media;
 use RGilyov\FileManager\Models\Video;
-use RGilyov\Providers\FileManagerServiceProvider;
+use RGilyov\FileManager\Providers\FileManagerServiceProvider;
+use finfo;
 
 /**
  * Class BaseTestCase
@@ -14,6 +16,21 @@ use RGilyov\Providers\FileManagerServiceProvider;
  */
 abstract class BaseTestCase extends TestCase
 {
+    /**
+     * @var UploadedFile
+     */
+    protected $photo;
+
+    /**
+     * @var UploadedFile
+     */
+    protected $video;
+
+    /**
+     * @var UploadedFile
+     */
+    protected $file;
+
     /**
      * @throws \Exception
      */
@@ -25,7 +42,35 @@ abstract class BaseTestCase extends TestCase
 
         $this->artisan('migrate', ['--database' => 'testbench']);
 
+        $this->photo = $this->generateUploadedFile('/files/test_image.png');
+        $this->video = $this->generateUploadedFile('/files/test_video.mp4');
+        $this->file  = $this->generateUploadedFile('/files/test_file.txt');
+    }
 
+    /**
+     * @param $file_name
+     * @return UploadedFile
+     * @throws \Exception
+     */
+    protected function generateUploadedFile($file_name)
+    {
+        $file_name = __DIR__ . $file_name;
+
+        $file_path = storage_path($file_name);
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+
+        if (is_file($file_name)) {
+            return new UploadedFile(
+                $file_path,
+                $file_name,
+                $finfo->file($file_path),
+                filesize($file_path),
+                0,
+                false
+            );
+        }
+
+        throw new \Exception("File {$file_name} not found");
     }
 
     /**

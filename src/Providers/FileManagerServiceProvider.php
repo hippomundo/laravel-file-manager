@@ -1,6 +1,6 @@
 <?php
 
-namespace RGilyov\Providers;
+namespace RGilyov\FileManager\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -13,10 +13,10 @@ class FileManagerServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->loadMigrationsFrom(__DIR__.'/database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         $this->publishes([
-            __DIR__.'/config/file-manager.php' => config_path('file-manager.php')
+            __DIR__.'/../config/file-manager.php' => config_path('file-manager.php')
         ], 'config');
     }
 
@@ -27,7 +27,7 @@ class FileManagerServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/config/file-manager.php', 'file-manager');
+        $this->mergeConfigFrom(__DIR__ . '/../config/file-manager.php', 'file-manager');
 
         if (method_exists($this, 'commands')) {
             $this->commands([
