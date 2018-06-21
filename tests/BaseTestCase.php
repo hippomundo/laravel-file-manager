@@ -15,6 +15,20 @@ use RGilyov\Providers\FileManagerServiceProvider;
 abstract class BaseTestCase extends TestCase
 {
     /**
+     * @throws \Exception
+     */
+    public function setUp()
+    {
+        parent::setUp();
+
+        $this->loadMigrationsFrom(__DIR__ . '/database/migrations');
+
+        $this->artisan('migrate', ['--database' => 'testbench']);
+
+
+    }
+
+    /**
      * @param \Illuminate\Foundation\Application $app
      * @return array
      */

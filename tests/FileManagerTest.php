@@ -10,13 +10,6 @@ use RGilyov\FileManage\Test\BaseTestCase;
  */
 class FileManagerTest extends BaseTestCase
 {
-    public function setUp()
-    {
-        parent::setUp();
-
-
-    }
-
     /** @test */
     public function it_can()
     {
