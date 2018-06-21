@@ -9,6 +9,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use RGilyov\FileManager\ManagerFactory;
+use RGilyov\FileManager\ResolvedRelation;
 
 /**
  * Class MediaTrait|Model
@@ -42,6 +43,15 @@ trait MediaTrait
     public function fileManagerConfig()
     {
         return null;
+    }
+
+    /**
+     * @param Model $model
+     * @return mixed
+     */
+    public function fileManagerFolder($model)
+    {
+        return $model->id;
     }
 
     /**
@@ -113,7 +123,7 @@ trait MediaTrait
      * @return bool|Collection
      * @throws \Exception
      */
-    public function createFile(array $attributes)
+    public function fileManagerSaveFiles(array $attributes)
     {
         /** @var $this Model|MediaTrait */
         if (!$this->exists) {
@@ -124,43 +134,100 @@ trait MediaTrait
     }
 
     /**
+     * @param $relationOrId
+     * @param null $id
+     * @return \Illuminate\Database\Eloquent\Collection|Model|\RGilyov\FileManager\Interfaces\Mediable
+     */
+    public function fileManagerFindFile($relationOrId, $id = null)
+    {
+        return $this->resolveRelation(func_get_args())->find();
+    }
+
+    /**
+     * @param $relationOrId
+     * @param null $id
      * @return bool|null
      * @throws \Exception
      */
-    public function deleteFile()
+    public function fileManagerDeleteFile($relationOrId, $id = null)
     {
-        $args = func_get_args();
+        return $this->resolveRelation(func_get_args())->delete();
+    }
 
-        if (count($args) == 2) {
-            $relation = $args[0];
-            $id       = ( int )$args[1];
-        } else {
+    /**
+     * @param $relationOrId
+     * @param null $idOrSizes
+     * @param array|null $sizes
+     * @return Model|\RGilyov\FileManager\Interfaces\Mediable
+     * @throws \RGilyov\FileManager\FileManagerException
+     */
+    public function fileManagerResize($relationOrId, $idOrSizes = null, array $sizes = null)
+    {
+        $sizes = is_array($idOrSizes) ? $idOrSizes : $sizes;
+
+        $resolved = $this->resolveRelation(func_get_args());
+
+        $manager = $this->getFileManager($resolved->getRelation(), $this->fileManagerFolder($this));
+
+        $model = $resolved->find();
+
+        return $manager->resize($model, $sizes);
+    }
+
+    /**
+     * @param $relationOrId
+     * @param null $idOrRotation
+     * @param array|null $rotation
+     * @return \RGilyov\FileManager\Interfaces\Mediable
+     * @throws \RGilyov\FileManager\FileManagerException
+     */
+    public function fileManagerRotateImage($relationOrId, $idOrRotation = null, $rotation = null)
+    {
+        $rotation = $rotation ? $rotation : $idOrRotation;
+
+        $resolved = $this->resolveRelation(func_get_args());
+
+        $manager = $this->getFileManager($resolved->getRelation(), $this->fileManagerFolder($this));
+
+        $model = $resolved->find();
+
+        return $manager->rotate($model, $rotation);
+    }
+
+    /**
+     * @param $relationOrId
+     * @param null $id
+     * @return \RGilyov\FileManager\Interfaces\Mediable
+     * @throws \RGilyov\FileManager\FileManagerException
+     */
+    public function fileManagerUpdateNames($relationOrId, $id = null)
+    {
+        $resolved = $this->resolveRelation(func_get_args());
+
+        $manager = $this->getFileManager($resolved->getRelation(), $this->fileManagerFolder($this));
+
+        $model = $resolved->find();
+
+        return $manager->updateFileNames($model);
+    }
+
+    /**
+     * @param array $args
+     * @return ResolvedRelation
+     */
+    protected function resolveRelation(array $args)
+    {
+        if (count($args) === 1) {
             $relation = '';
             $id       = isset($args[0]) ? $args[0] : null;
+        } else {
+            $relation = $args[0];
+            $id       = ( int )$args[1];
         }
 
         $relation = $this->getFileRelation($relation);
 
-        $model  = null;
-        $detach = false;
-        if ($id && $relation instanceof BelongsToMany) {
-            $detach = true;
-            $model = $relation->find($id);
-        } elseif ($relation instanceof BelongsTo) {
-            $model = $relation->first();
-        }
-
-        if ($model && $this->isMedia($model)) {
-            if ($detach) {
-                $relation->detach($model->id);
-            } else {
-                $this->{strtolower(class_basename($model))."_id"} = null;
-                $this->save();
-            }
-            return $model->delete();
-        }
-
-        return false;
+        return new ResolvedRelation($id, $relation);
     }
 
     /**
@@ -191,15 +258,6 @@ trait MediaTrait
         }
 
         return $this->{array_keys($this->fileManagerOptions)[0]}();
-    }
-
-    /**
-     * @param $model
-     * @return bool
-     */
-    protected function isMedia($model)
-    {
-        return ($model instanceof Media || $model instanceof Video || $model instanceof File);
     }
 
     /**
@@ -260,7 +318,7 @@ trait MediaTrait
     {
         /** @var $mediaModel Model */
         /** @var $model Model|MediaTrait */
-        if (($mediaModel = $model->{$method}()->first()) && $this->isMedia($mediaModel)) {
+        if (($mediaModel = $model->{$method}()->first()) && ResolvedRelation::isMedia($mediaModel)) {
             $mediaModel->delete();
         }
 
@@ -318,7 +376,7 @@ trait MediaTrait
 
             $relation = $this->{$method}();
 
-            $fileModel = $this->saveFile($file, $relation, $model->id);
+            $fileModel = $this->saveFile($file, $relation, $this->fileManagerFolder($model));
 
             if (isset($options['data']) && !empty($options['data'])) {
                 $fileModel->fill($options['data']);
