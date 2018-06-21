@@ -161,7 +161,9 @@ abstract class BaseManager implements ManagerContract
      */
     public function originalName(UploadedFile $file)
     {
-        return Str::slug($file->getClientOriginalName(), '_');
+        return Str::slug(
+            pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), '_'
+        ) . "." . $this->extension($file);
     }
 
     /**
