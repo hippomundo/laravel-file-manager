@@ -301,6 +301,8 @@ class MediaManager extends BaseManager
         } else {
             $image = new ImageManager();
 
+            $file = is_string($file) ? $this->fullPath($file) : $file;
+
             return (string) $image->make($file)
                 ->resize($width, $height, function ($constraint) {
                     $constraint->aspectRatio();
