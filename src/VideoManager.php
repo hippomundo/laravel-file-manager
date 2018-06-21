@@ -32,12 +32,13 @@ class VideoManager extends BaseManager
     /**
      * @param UploadedFile $file
      * @return array
+     * @throws FileManagerException
      */
     protected function saveFile(UploadedFile $file)
     {
         $type           = $file->getMimeType();
         $file_size      = $file->getClientSize();
-        $folder_path    = $this->mainFolder();
+        $folder_path    = $this->mainFolder($file);
         $original_name  = $this->originalName($file);
         $storage        = $this->getStorageName();
         $extension      = $this->extension($file);

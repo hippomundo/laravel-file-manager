@@ -24,23 +24,20 @@ class TestTables extends Migration
 
         Schema::create('test_model_photos', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('photo_id', false, true)->index('photo_id');
-            $table->integer('test_model_id', false, true)->index('test_model_id_photos');
-            $table->timestamps();
+            $table->integer('photo_id', false, true)->index('photo_id')->nullable();
+            $table->integer('test_model_id', false, true)->index('test_model_id_photos')->nullable();
         });
 
         Schema::create('test_model_videos', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('video_id', false, true)->index('video_id');
-            $table->integer('test_model_id', false, true)->index('test_model_id_videos');
-            $table->timestamps();
+            $table->integer('video_id', false, true)->index('video_id')->nullable();
+            $table->integer('test_model_id', false, true)->index('test_model_id_videos')->nullable();
         });
 
         Schema::create('test_model_files', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('file_id', false, true)->index('file_id');
-            $table->integer('test_model_id', false, true)->index('test_model_id_files');
-            $table->timestamps();
+            $table->integer('file_id', false, true)->index('file_id')->nullable();
+            $table->integer('test_model_id', false, true)->index('test_model_id_files')->nullable();
         });
     }
 

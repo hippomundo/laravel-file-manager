@@ -2,6 +2,7 @@
 
 namespace RGilyov\FileManager;
 
+use Illuminate\Support\Facades\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
@@ -25,6 +26,11 @@ abstract class BaseManager implements ManagerContract
      * @var string
      */
     protected $mainFolder;
+
+    /**
+     * @var string
+     */
+    protected $loadedMainFolder;
 
     /**
      * @var array
@@ -144,15 +150,32 @@ abstract class BaseManager implements ManagerContract
     /**
      * @param UploadedFile $file
      * @return string
+     * @throws FileManagerException
      */
     public function moveOriginal(UploadedFile $file)
     {
-        $path = $this->mainFolder();
+        $path = $this->mainFolder($file);
         $name = $this->originalName($file);
 
-        $file->move($path, $name);
+        $path = $this->glueDirParts($path, $name);
 
-        return $this->glueDirParts($path, $name);
+        $this->putFileToPath($path, $file);
+
+        return $path;
+    }
+
+    /**
+     * @param $path
+     * @param $contents
+     * @throws FileManagerException
+     */
+    public function putFileToPath($path, $contents)
+    {
+        $contents = $contents instanceof UploadedFile ? File::get($contents) : $contents;
+
+        if (! Storage::put($path, $contents)) {
+            throw new FileManagerException('Was not able to save image');
+        }
     }
 
     /**
@@ -206,13 +229,26 @@ abstract class BaseManager implements ManagerContract
     }
 
     /**
+     * @param UploadedFile $file
+     * @param null $index
      * @return string
      */
-    public function mainFolder()
+    public function mainFolder(UploadedFile $file, $index = null)
     {
-        return $this->mainFolder . $this->sep
-            . Arr::get($this->config, 'directory')
-            . ($this->preFolder ? $this->sep . $this->preFolder : '');
+        if ($this->loadedMainFolder) {
+            return $this->loadedMainFolder;
+        }
+
+        $dir = $this->mainFolder . $this->sep
+            . Arr::get($this->config, 'directory') . $this->sep
+            . ($this->preFolder ? $this->preFolder . $this->sep : "")
+            . $this->fileName($file) . ($index ? "_{$index}" : "");
+
+        if (Storage::exists($dir)) {
+            return $this->mainFolder($file, ++$index);
+        }
+
+        return $this->loadedMainFolder = $dir;
     }
 
     /**
@@ -233,7 +269,7 @@ abstract class BaseManager implements ManagerContract
     {
         $name = Str::slug(Str::random(), '_') . "." . $this->extension($file);
 
-        $path = $this->glueDirParts($this->mainFolder(), $name);
+        $path = $this->glueDirParts($this->mainFolder($file), $name);
 
         if (Storage::exists($path)) {
             return $this->generateUniquePath($file);

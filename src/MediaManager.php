@@ -45,7 +45,7 @@ class MediaManager extends BaseManager
         $url            = $this->pathToUrl($path);
         $thumbnail_path = $this->saveThumbnail($file);
         $thumbnail_url  = $this->pathToUrl($thumbnail_path);
-        $folder_path    = $this->mainFolder();
+        $folder_path    = $this->mainFolder($file);
         $original_name  = $this->originalName($file);
         $storage        = $this->getStorageName();
         $extension      = $this->extension($file);
@@ -278,9 +278,7 @@ class MediaManager extends BaseManager
      */
     protected function saveImageFile($path, $contents)
     {
-        if (! Storage::put($path, $contents)) {
-            throw new FileManagerException('Was not able to save image');
-        }
+        $this->putFileToPath($path, $contents);
     }
 
     /**
