@@ -33,20 +33,36 @@ class TestModel extends Model
 
     /**
      * Key is relation method, 'request_binding' is request field,
-     * 'data' is optional key, the data will be attached to media data inside your db
+     * 'data' is optional key, the data will be attached to media data inside your db,
+     * 'config' rewrites default file configurations
      *
      * @return array
      */
     public function setMediaOptions()
     {
         return [
-            'photo',
+            'photo' => [
+                'config' =>
+                    [
+                        'image_size' => ['width' => 1000, 'height' => 500],
+                        'thumbnail'  => ['width' => 100, 'height' => 100],
+                        'directory'  => 'photos'
+                    ]
+            ],
             'video',
             'file',
             'photos',
             'videos',
             'files' => ['request_binding' => 'super_files'],
         ];
+    }
+
+    /**
+     * @return string
+     */
+    public function fileManagerFolder()
+    {
+        return "{$this->name}_{$this->id}";
     }
 
     /**

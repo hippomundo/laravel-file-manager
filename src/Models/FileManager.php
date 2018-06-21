@@ -5,6 +5,7 @@ namespace RGilyov\FileManager\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -36,16 +37,6 @@ trait FileManager
     }
 
     /**
-     * Media config
-     *
-     * @return array
-     */
-    public function fileManagerConfig()
-    {
-        return null;
-    }
-
-    /**
      * @return mixed
      */
     public function fileManagerFolder()
@@ -61,7 +52,8 @@ trait FileManager
         return [
             'file' => [
                 'request_binding' => 'file',
-                'data' => []
+                'config'          => null,
+                'data'            => [],
             ]
         ];
     }
@@ -72,10 +64,13 @@ trait FileManager
     public function formatFileManagerOptions()
     {
         $formattedOptions = [];
+
         foreach ($this->fileManagerOptions() as $method => &$options) {
-            $newMethodKey = (is_array($options)) ? $method : $options;
-            $formattedOptions[$newMethodKey] = [
-                "request_binding" => Arr::get($options, 'request_binding', $newMethodKey),
+            $methodKey = (is_array($options)) ? $method : $options;
+
+            $formattedOptions[$methodKey] = [
+                "request_binding" => Arr::get($options, 'request_binding', $methodKey),
+                "config"          => Arr::get($options, 'config', null),
                 "data"            => Arr::get($options, 'data', [])
             ];
         }
@@ -170,7 +165,7 @@ trait FileManager
 
         $resolved = $this->resolveRelation(func_get_args());
 
-        $manager = $this->getFileManager($resolved->getRelation());
+        $manager = $this->getFileManager($resolved->getRelationName());
 
         $model = $resolved->find();
 
@@ -190,7 +185,7 @@ trait FileManager
 
         $resolved = $this->resolveRelation(func_get_args());
 
-        $manager = $this->getFileManager($resolved->getRelation());
+        $manager = $this->getFileManager($resolved->getRelationName());
 
         $model = $resolved->find();
 
@@ -207,7 +202,7 @@ trait FileManager
     {
         $resolved = $this->resolveRelation(func_get_args());
 
-        $manager = $this->getFileManager($resolved->getRelation());
+        $manager = $this->getFileManager($resolved->getRelationName());
 
         $model = $resolved->find();
 
@@ -221,16 +216,16 @@ trait FileManager
     protected function resolveRelation(array $args)
     {
         if (count($args) === 1) {
-            $relation = '';
-            $id       = isset($args[0]) ? $args[0] : null;
+            $relationName = '';
+            $id           = isset($args[0]) ? $args[0] : null;
         } else {
-            $relation = $args[0];
-            $id       = ( int )$args[1];
+            $relationName = $args[0];
+            $id           = ( int )$args[1];
         }
 
-        $relation = $this->getFileRelation($relation);
+        $relation = $this->getFileRelation($relationName);
 
-        return new ResolvedRelation($id, $relation);
+        return new ResolvedRelation($id, $relation, $relationName);
     }
 
     /**
@@ -345,9 +340,9 @@ trait FileManager
      */
     protected function getFileManager($relation)
     {
-        $config = $this->fileManagerConfig();
+        $config = $this->fileManagerOptions[$relation]['config'];
 
-        $manager = ManagerFactory::get($relation);
+        $manager = ManagerFactory::get($this->{$relation}());
 
         $manager->setPreFolder($this->fileManagerFolder());
 
@@ -371,9 +366,7 @@ trait FileManager
         if ($file instanceof UploadedFile) {
             $options = $this->fileManagerOptions[$method];
 
-            $relation = $this->{$method}();
-
-            $fileModel = $this->saveFile($file, $relation);
+            $fileModel = $this->saveFile($file, $method);
 
             if (isset($options['data']) && ! empty($options['data'])) {
                 $fileModel->fill($options['data']);
@@ -381,7 +374,7 @@ trait FileManager
 
             $fileModel->save();
 
-            $result = $relation->{$relationSaveMethod}($fileModel);
+            $result = $this->{$method}()->{$relationSaveMethod}($fileModel);
 
             if ($relationSaveMethod == 'associate') {
                 $result->update();

@@ -28,15 +28,30 @@ class ResolvedRelation
     protected $relation;
 
     /**
+     * @var string
+     */
+    protected $relationName;
+
+    /**
      * ResolvedRelation constructor.
      * @param $relation
      * @param $id
      */
-    public function __construct($id, $relation)
+    public function __construct($id, $relation, $relationName)
     {
         $this->relation = $relation;
 
+        $this->relationName = $relationName;
+
         $this->id = $id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRelationName()
+    {
+        return $this->relationName;
     }
 
     /**
