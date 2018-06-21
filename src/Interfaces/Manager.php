@@ -3,7 +3,7 @@
 namespace RGilyov\FileManager\Interfaces;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\UploadedFile;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use RGilyov\FileManager\Models\File;
 use RGilyov\FileManager\Models\Media;
 use RGilyov\FileManager\Models\Video;

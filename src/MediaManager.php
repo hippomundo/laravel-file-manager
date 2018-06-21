@@ -2,8 +2,8 @@
 
 namespace RGilyov\FileManager;
 
-use Illuminate\Http\File;
-use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManager;

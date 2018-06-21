@@ -2,7 +2,7 @@
 
 namespace RGilyov\FileManager;
 
-use Illuminate\Http\UploadedFile;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -161,7 +161,7 @@ abstract class BaseManager implements ManagerContract
      */
     public function originalName(UploadedFile $file)
     {
-        return Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), '_');
+        return Str::slug($file->getClientOriginalName(), '_');
     }
 
     /**
@@ -197,7 +197,7 @@ abstract class BaseManager implements ManagerContract
     public function extension($path)
     {
         if ($path instanceof UploadedFile) {
-            return $path->extension();
+            $path = $path->getClientOriginalName();
         }
 
         return pathinfo($path, PATHINFO_EXTENSION);

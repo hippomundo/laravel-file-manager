@@ -13,7 +13,7 @@ class CreateFilesTable extends Migration
      */
     public function up()
     {
-        if (Schema::hasTable('files')) {
+        if (! Schema::hasTable('files')) {
             Schema::create('files', function (Blueprint $table) {
                 $table->increments('id');
                 $table->string('path')->nullable();
@@ -21,7 +21,7 @@ class CreateFilesTable extends Migration
                 $table->string('folder_path')->nullable();
                 $table->string('original_name')->nullable();
                 $table->string('extension', 20)->nullable();
-                $table->string('hash')->unique('hash')->index('hash')->nullable();
+                $table->string('hash')->unique('files_hash')->nullable();
                 $table->string('storage', 100)->nullable();
                 $table->string('type', 100)->nullable();
                 // bytes

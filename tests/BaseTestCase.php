@@ -2,7 +2,8 @@
 
 namespace RGilyov\FileManager\Test;
 
-use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use RGilyov\FileManager\Test\File\UploadedFile;
 use Orchestra\Testbench\TestCase;
 use RGilyov\FileManager\Models\File;
 use RGilyov\FileManager\Models\Media;
@@ -38,13 +39,18 @@ abstract class BaseTestCase extends TestCase
     {
         parent::setUp();
 
-        $this->loadMigrationsFrom(__DIR__ . '/database/migrations');
+        $this->artisan(
+            'migrate',
+            ['--database' => 'testbench', '--realpath' => realpath(__DIR__.'/../src/database/migrations')]
+        );
+        $this->artisan(
+            'migrate',
+            ['--database' => 'testbench', '--realpath' => realpath(__DIR__.'/database/migrations')]
+        );
 
-        $this->artisan('migrate', ['--database' => 'testbench']);
-
-        $this->photo = $this->generateUploadedFile('/files/test_image.png');
-        $this->video = $this->generateUploadedFile('/files/test_video.mp4');
-        $this->file  = $this->generateUploadedFile('/files/test_file.txt');
+        $this->photo = $this->generateUploadedFile('test_image.png');
+        $this->video = $this->generateUploadedFile('test_video.mp4');
+        $this->file  = $this->generateUploadedFile('test_file.txt');
     }
 
     /**
@@ -54,23 +60,21 @@ abstract class BaseTestCase extends TestCase
      */
     protected function generateUploadedFile($file_name)
     {
-        $file_name = __DIR__ . $file_name;
-
-        $file_path = storage_path($file_name);
+        $file_path = __DIR__ . "/files/" . $file_name;
         $finfo = new finfo(FILEINFO_MIME_TYPE);
 
-        if (is_file($file_name)) {
+        if (is_file($file_path)) {
             return new UploadedFile(
                 $file_path,
                 $file_name,
                 $finfo->file($file_path),
                 filesize($file_path),
                 0,
-                false
+                true
             );
         }
 
-        throw new \Exception("File {$file_name} not found");
+        throw new \Exception("File {$file_path} not found");
     }
 
     /**
@@ -92,7 +96,13 @@ abstract class BaseTestCase extends TestCase
      */
     protected function getEnvironmentSetUp($app)
     {
-        $app['config']->set('database.default', 'sqlite');
+        // Setup default database to use sqlite :memory:
+        $app['config']->set('database.default', 'testbench');
+        $app['config']->set('database.connections.testbench', [
+            'driver'   => 'sqlite',
+            'database' => ':memory:',
+            'prefix'   => '',
+        ]);
     }
 
     /**
@@ -111,6 +121,8 @@ abstract class BaseTestCase extends TestCase
         File::all()->each(function (File $model) {
             $model->delete();
         });
+
+        @Storage::deleteDirectory('files');
 
         parent::tearDown();
     }

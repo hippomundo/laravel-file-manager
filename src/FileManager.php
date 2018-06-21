@@ -2,7 +2,7 @@
 
 namespace RGilyov\FileManager;
 
-use Illuminate\Http\UploadedFile;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use RGilyov\FileManager\Interfaces\Mediable;
 use RGilyov\FileManager\Models\File;
 

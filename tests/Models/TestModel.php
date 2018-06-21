@@ -38,7 +38,7 @@ class TestModel extends Model
      *
      * @return array
      */
-    public function setMediaOptions()
+    public function fileManagerOptions()
     {
         return [
             'photo' => [

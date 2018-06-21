@@ -28,12 +28,13 @@
   ],
   "require": {
     "php": ">=5.6.4",
-    "laravel/framework": "^5.1",
+    "laravel/laravel": "5.2",
     "intervention/image": "^2.3"
   },
   "require-dev": {
     "orchestra/testbench": "3.2",
-    "phpunit/phpunit": "6.0",
+    "orchestra/database": "3.2",
+    "phpunit/phpunit": "5.7",
     "mockery/mockery": "^0.9.4"
   },
   "autoload": {
@@ -45,6 +46,5 @@
     "psr-4": {
       "RGilyov\\FileManager\\Test\\": "tests/"
     }
-  },
-  "minimum-stability": "dev"
+  }
 }
