@@ -2,6 +2,7 @@
 
 namespace RGilyov\FileManager;
 
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
 use RGilyov\FileManager\Interfaces\Mediable;
@@ -69,7 +70,7 @@ class VideoManager extends BaseManager
      */
     public function saveVideo($original_path)
     {
-        $path = $this->generateUniquePath($original_path);
+        $path = $this->generateUniquePathFromExisting($original_path);
 
         $size = $this->getResize();
 
@@ -91,7 +92,7 @@ class VideoManager extends BaseManager
 
         exec($exec, $output, $return_var);
 
-        if ($return_var !== 0) {
+        if ($return_var !== 0 || ! Storage::exists($toPath)) {
             $this->deleteFile($toPath);
 
             return $fromPath;
@@ -124,7 +125,14 @@ class VideoManager extends BaseManager
 
         $model->deleteVideo();
 
-        $this->resizeAndSaveVideo($model->original_path, $path, $size);
+        $resultPath = $this->resizeAndSaveVideo($model->original_path, $path, $size);
+
+        if ($resultPath === $model->original_path) {
+            $model->update([
+                'path' => $model->original_path,
+                'url'  => $model->original_url
+            ]);
+        }
 
         return $model;
     }

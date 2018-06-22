@@ -21,17 +21,17 @@ class Video extends Model implements Mediable
      * @var array
      */
     protected $fillable = [
+        'original_path',
+        'original_url',
         'path',
-        'thumbnail_path',
         'url',
-        'thumbnail_url',
-        "file_size",
         'folder_path',
         'original_name',
         'extension',
         'hash',
         'storage',
-        'type'
+        'type',
+        'file_size'
     ];
 
     /**

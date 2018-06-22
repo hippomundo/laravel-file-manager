@@ -3,6 +3,7 @@
 namespace RGilyov\CsvImporter\Test;
 
 use Illuminate\Support\Facades\Storage;
+use RGilyov\FileManager\Models\Video;
 use RGilyov\FileManager\Test\BaseTestCase;
 use RGilyov\FileManager\Models\Media;
 use RGilyov\FileManager\Test\Models\TestModel;
@@ -144,12 +145,149 @@ class FileManagerTest extends BaseTestCase
         $this->assertFalse(Storage::exists($updatedPhoto->path));
         $this->assertFalse(Storage::exists($updatedPhoto->thumbnail_path));
         $this->assertFalse(Storage::exists($updatedPhoto->original_path));
+
+        $testModel->fileManagerDeleteFile('photos', $manyPhoto->id);
+
+        $photos = $testModel->photos()->get();
+
+        $this->assertTrue($photos->count() === 1);
+
+        /*
+         * Create many image
+         */
+        $testModel->fileManagerSaveFiles([
+            'photos'=> [
+                clone $this->photo,
+                clone $this->photo
+            ]
+        ]);
+
+        $photos = $testModel->photos()->get();
+
+        $this->assertTrue($photos->count() === 3);
+        $photos->each(function (Media $model) {
+            $this->assertTrue(Storage::exists($model->path));
+            $this->assertTrue(Storage::exists($model->thumbnail_path));
+            $this->assertTrue(Storage::exists($model->original_path));
+        });
     }
 
     /** @test */
     public function it_can_manage_videos()
     {
+        /*
+         * Attach and save
+         */
+        $attrs = [
+            'name'   => 'test_name',
+            'video'  => clone $this->video,
+            'videos' => [
+                clone $this->video,
+                clone $this->video
+            ]
+        ];
 
+        $testModel = TestModel::create($attrs);
+
+        $video  = $testModel->video()->first();
+        $videos = $testModel->videos()->get();
+
+        $this->assertTrue($video instanceof Video);
+        $this->assertTrue($videos->count() === 2);
+
+        $this->assertTrue(Storage::exists($video->path));
+        $this->assertTrue(Storage::exists($video->original_path));
+
+        $videos->each(function (Video $model) {
+            $this->assertTrue(Storage::exists($model->path));
+            $this->assertTrue(Storage::exists($model->original_path));
+        });
+
+        /*
+         * Resize
+         */
+        $resize = ['resize' => '720p30'];
+
+        $testModel->fileManagerResize('video', $resize);
+
+        $resizedVideo = $testModel->video()->first();
+
+        $this->assertTrue(Storage::exists($resizedVideo->path));
+        $this->assertTrue(Storage::exists($resizedVideo->original_path));
+
+        $manyVideo = $videos->first();
+
+        $testModel->fileManagerResize('videos', $manyVideo->id, $resize);
+
+        $resizedManyVideos = $testModel->videos()->first();
+
+        $this->assertTrue(Storage::exists($resizedManyVideos->path));
+        $this->assertTrue(Storage::exists($resizedManyVideos->original_path));
+
+        /*
+         * Rename files
+         */
+        $testModel->fileManagerUpdateNames('video');
+
+        $renamedVideo = $testModel->video()->first();
+
+        $this->assertTrue(Storage::exists($renamedVideo->path));
+        $this->assertTrue(Storage::exists($renamedVideo->original_path));
+        $this->assertTrue($resizedVideo->path !== $renamedVideo->path);
+
+        $testModel->fileManagerUpdateNames('videos', $manyVideo->id);
+
+        $renamedManyVideo = $testModel->videos()->first();
+
+        $this->assertTrue(Storage::exists($renamedManyVideo->path));
+        $this->assertTrue(Storage::exists($renamedManyVideo->original_path));
+        $this->assertTrue($manyVideo->path !== $renamedManyVideo->path);
+
+        /*
+         * Update video
+         */
+        $testModel->update(['video' => clone $this->video]);
+
+        $updatedVideo = $testModel->video()->first();
+
+        $this->assertTrue(Storage::exists($updatedVideo->path));
+        $this->assertTrue(Storage::exists($updatedVideo->original_path));
+        $this->assertTrue($updatedVideo->path !== $renamedVideo->path);
+
+        /*
+         * Delete video
+         */
+        $testModel->fileManagerDeleteFile('video');
+
+        $deleted = $testModel->video()->first();
+
+        $this->assertTrue(is_null($deleted));
+        $this->assertFalse(Storage::exists($updatedVideo->path));
+        $this->assertFalse(Storage::exists($updatedVideo->original_path));
+
+        $testModel->fileManagerDeleteFile('videos', $manyVideo->id);
+
+        $videos = $testModel->videos()->get();
+
+        $this->assertTrue($videos->count() === 1);
+
+        /*
+         * Create many videos
+         */
+        $testModel->fileManagerSaveFiles([
+            'videos'=> [
+                clone $this->video,
+                clone $this->video
+            ]
+        ]);
+
+        $videos = $testModel->videos()->get();
+
+        $this->assertTrue($videos->count() === 3);
+        $videos->each(function (Video $model) {
+            $this->assertTrue(Storage::exists($model->path));
+            $this->assertTrue(Storage::exists($model->original_path));
+        });
     }
 
     /** @test */

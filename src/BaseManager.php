@@ -242,12 +242,12 @@ abstract class BaseManager implements ManagerContract
     }
 
     /**
-     * @param UploadedFile $file
+     * @param $file
      * @param null $index
      * @param bool $skipCheck
      * @return string
      */
-    public function mainFolder(UploadedFile $file, $index = null, $skipCheck = false)
+    public function mainFolder($file, $index = null, $skipCheck = false)
     {
         if ($this->loadedMainFolder) {
             return $this->loadedMainFolder;
