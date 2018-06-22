@@ -36,7 +36,7 @@ class FileManager extends BaseManager
     {
         $type           = $file->getMimeType();
         $file_size      = $file->getClientSize();
-        $folder_path    = $this->mainFolder();
+        $folder_path    = $this->mainFolder($file);
         $original_name  = $this->originalName($file);
         $storage        = $this->getStorageName();
         $extension      = $this->extension($file);
@@ -60,15 +60,13 @@ class FileManager extends BaseManager
     /**
      * @param UploadedFile $file
      * @return string
+     * @throws FileManagerException
      */
     protected function moveFile(UploadedFile $file)
     {
         $path = $this->generateUniquePath($file);
 
-        $baseName = $this->baseName($path);
-        $fileName = $this->fileName($path);
-
-        $file->move($baseName, $fileName);
+        $this->putFileToPath($path, $file);
 
         return $path;
     }

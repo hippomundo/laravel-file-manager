@@ -224,7 +224,7 @@ trait FileManager
     public function getFileRelationMethod($relation)
     {
         if ($relation && is_string($relation)) {
-            if (isset($this->mediaOptions[$relation])) {
+            if (isset($this->fileManagerOptions[$relation])) {
                 return $relation;
             }
 

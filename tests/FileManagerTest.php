@@ -3,6 +3,7 @@
 namespace RGilyov\CsvImporter\Test;
 
 use Illuminate\Support\Facades\Storage;
+use RGilyov\FileManager\Models\File;
 use RGilyov\FileManager\Models\Video;
 use RGilyov\FileManager\Test\BaseTestCase;
 use RGilyov\FileManager\Models\Media;
@@ -293,6 +294,92 @@ class FileManagerTest extends BaseTestCase
     /** @test */
     public function it_can_manage_files()
     {
+        /*
+         * Attach and save
+         */
+        $attrs = [
+            'name'        => 'test_name',
+            'file'        => clone $this->file,
+            'super_files' => [
+                clone $this->file,
+                clone $this->file
+            ]
+        ];
 
+        $testModel = TestModel::create($attrs);
+
+        $file  = $testModel->file()->first();
+        $files = $testModel->files()->get();
+
+        $manyFile = $files->first();
+
+        $this->assertTrue($file instanceof File);
+        $this->assertTrue($files->count() === 2);
+
+        $this->assertTrue(Storage::exists($file->path));
+
+        $files->each(function (File $model) {
+            $this->assertTrue(Storage::exists($model->path));
+        });
+
+        /*
+         * Rename files
+         */
+        $testModel->fileManagerUpdateNames('file');
+
+        $renamedFile = $testModel->file()->first();
+
+        $this->assertTrue(Storage::exists($renamedFile->path));
+        $this->assertTrue($file->path !== $renamedFile->path);
+
+        $testModel->fileManagerUpdateNames('files', $manyFile->id);
+
+        $renamedManyFile = $testModel->files()->first();
+
+        $this->assertTrue(Storage::exists($renamedManyFile->path));
+        $this->assertTrue($manyFile->path !== $renamedManyFile->path);
+
+        /*
+         * Update video
+         */
+        $testModel->update(['file' => clone $this->file]);
+
+        $updatedFile = $testModel->file()->first();
+
+        $this->assertTrue(Storage::exists($updatedFile->path));
+        $this->assertTrue($updatedFile->path !== $renamedFile->path);
+
+        /*
+         * Delete file
+         */
+        $testModel->fileManagerDeleteFile('file');
+
+        $deleted = $testModel->file()->first();
+
+        $this->assertTrue(is_null($deleted));
+        $this->assertFalse(Storage::exists($updatedFile->path));
+
+        $testModel->fileManagerDeleteFile('files', $manyFile->id);
+
+        $files = $testModel->files()->get();
+
+        $this->assertTrue($files->count() === 1);
+
+        /*
+         * Create many files
+         */
+        $testModel->fileManagerSaveFiles([
+            'super_files'=> [
+                clone $this->file,
+                clone $this->file
+            ]
+        ]);
+
+        $files = $testModel->files()->get();
+
+        $this->assertTrue($files->count() === 3);
+        $files->each(function (File $model) {
+            $this->assertTrue(Storage::exists($model->path));
+        });
     }
 }
