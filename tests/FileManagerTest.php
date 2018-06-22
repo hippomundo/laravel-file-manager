@@ -369,7 +369,7 @@ class FileManagerTest extends BaseTestCase
          * Create many files
          */
         $testModel->fileManagerSaveFiles([
-            'super_files'=> [
+            'super_files' => [
                 clone $this->file,
                 clone $this->file
             ]
