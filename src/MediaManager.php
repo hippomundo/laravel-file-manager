@@ -72,19 +72,16 @@ class MediaManager extends BaseManager
 
     /**
      * @param Mediable|Media $model
-     * @param array ...$sizes
+     * @param array $sizes
      * @return \Illuminate\Database\Eloquent\Model|Mediable
      * @throws FileManagerException
      */
-    public function resize(Mediable $model, ...$sizes)
+    public function resize(Mediable $model, $sizes)
     {
         $this->checkOriginal($model->original_path);
 
-        $imageSizes     = Arr::get($sizes, 0);
-        $thumbnailSizes = Arr::get($sizes, 1);
-
-        $imageSizes     = $imageSizes ? $imageSizes : $this->getImageSizes();
-        $thumbnailSizes = $thumbnailSizes ? $thumbnailSizes : $this->getThumbnailSizes();
+        $imageSizes     = Arr::get($sizes, 'image_size', $this->getImageSizes());
+        $thumbnailSizes = Arr::get($sizes, 'thumbnail', $this->getThumbnailSizes());
 
         $resized = $this->resizeFile($model->original_path, $imageSizes);
 
@@ -110,7 +107,13 @@ class MediaManager extends BaseManager
      */
     protected function updateNamesOnChange()
     {
-        return Arr::get($this->config, 'update_names_on_change', false);
+        $value = Arr::get($this->config, 'update_names_on_change');
+
+        if (is_null($value)) {
+            return false;
+        }
+
+        return Arr::get($this->config, 'update_names_on_change');
     }
 
     /**
@@ -185,7 +188,7 @@ class MediaManager extends BaseManager
 
             $image = new ImageManager();
 
-            $contents = ( string )$image->make($path)->rotate($this->rotationValue($value))->encode();
+            $contents = ( string )$image->make($this->fullPath($path))->rotate($this->rotationValue($value))->encode();
 
             $this->deleteFile($path);
 

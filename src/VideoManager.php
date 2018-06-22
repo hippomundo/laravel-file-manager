@@ -110,17 +110,15 @@ class VideoManager extends BaseManager
 
     /**
      * @param Mediable|Video $model
-     * @param array ...$sizes
+     * @param array $sizes
      * @return \Illuminate\Database\Eloquent\Model|Mediable
      * @throws FileManagerException
      */
-    public function resize(Mediable $model, ...$sizes)
+    public function resize(Mediable $model, $sizes)
     {
         $this->checkOriginal($model->original_path);
 
-        $size = Arr::get($sizes, 0);
-
-        $size = $size ? $size : $this->getResize();
+        $size = Arr::get($sizes, 'resize', Arr::get($sizes, 0, $this->getResize()));
 
         $path = $model->path;
 

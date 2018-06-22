@@ -217,6 +217,19 @@ abstract class BaseManager implements ManagerContract
 
     /**
      * @param $path
+     * @return string
+     */
+    public function dirName($path)
+    {
+        if ($path instanceof UploadedFile) {
+            $path = $this->originalName($path);
+        }
+
+        return pathinfo($path, PATHINFO_DIRNAME);
+    }
+
+    /**
+     * @param $path
      * @return mixed
      */
     public function extension($path)
@@ -231,9 +244,10 @@ abstract class BaseManager implements ManagerContract
     /**
      * @param UploadedFile $file
      * @param null $index
+     * @param bool $skipCheck
      * @return string
      */
-    public function mainFolder(UploadedFile $file, $index = null)
+    public function mainFolder(UploadedFile $file, $index = null, $skipCheck = false)
     {
         if ($this->loadedMainFolder) {
             return $this->loadedMainFolder;
@@ -244,7 +258,7 @@ abstract class BaseManager implements ManagerContract
             . ($this->preFolder ? $this->preFolder . $this->sep : "")
             . $this->fileName($file) . ($index ? "_{$index}" : "");
 
-        if (Storage::exists($dir)) {
+        if (! $skipCheck && Storage::exists($dir)) {
             return $this->mainFolder($file, ++$index);
         }
 
@@ -284,7 +298,7 @@ abstract class BaseManager implements ManagerContract
      */
     public function generateUniquePathFromExisting($path)
     {
-        $baseName  = $this->baseName($path);
+        $baseName  = $this->dirName($path);
         $extension = $this->extension($path);
 
         $name = Str::slug(Str::random(), '_') . "." . $extension;
@@ -385,6 +399,12 @@ abstract class BaseManager implements ManagerContract
     {
         $model->deleteFile();
 
+        $dirName = $this->dirName($model->path);
+
+        if (Storage::exists($dirName)) {
+            Storage::deleteDirectory($dirName);
+        }
+
         return $model->delete();
     }
 
@@ -400,10 +420,10 @@ abstract class BaseManager implements ManagerContract
 
     /**
      * @param Mediable $model
-     * @param array ...$sizes
+     * @param array $sizes
      * @return Model|Mediable
      */
-    public function resize(Mediable $model, ...$sizes)
+    public function resize(Mediable $model, $sizes)
     {
         return $model;
     }

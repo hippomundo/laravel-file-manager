@@ -2,9 +2,12 @@
 
 namespace RGilyov\FileManager\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use \Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -69,7 +72,7 @@ trait FileManager
 
             $formattedOptions[$methodKey] = [
                 "request_binding" => Arr::get($options, 'request_binding', $methodKey),
-                "config"          => Arr::get($options, 'config', null),
+                "config"          => Arr::get($options, 'config', []),
                 "data"            => Arr::get($options, 'data', [])
             ];
         }
@@ -134,10 +137,11 @@ trait FileManager
      * @param $relationOrId
      * @param null $id
      * @return \Illuminate\Database\Eloquent\Collection|Model|\RGilyov\FileManager\Interfaces\Mediable
+     * @throws \RGilyov\FileManager\FileManagerException
      */
     public function fileManagerFindFile($relationOrId, $id = null)
     {
-        return $this->resolveRelation(func_get_args())->find();
+        return $this->resolveRelation(['relation' => $relationOrId, 'id' => $id])->find();
     }
 
     /**
@@ -148,7 +152,7 @@ trait FileManager
      */
     public function fileManagerDeleteFile($relationOrId, $id = null)
     {
-        return $this->resolveRelation(func_get_args())->delete();
+        return $this->resolveRelation(['relation' => $relationOrId, 'id' => $id])->delete();
     }
 
     /**
@@ -162,13 +166,9 @@ trait FileManager
     {
         $sizes = is_array($idOrSizes) ? $idOrSizes : $sizes;
 
-        $resolved = $this->resolveRelation(func_get_args());
+        $resolved = $this->resolveRelation(['relation' => $relationOrId, 'id' => $idOrSizes]);
 
-        $manager = $this->getFileManager($resolved->getRelationName());
-
-        $model = $resolved->find();
-
-        return $manager->resize($model, $sizes);
+        return $resolved->resize($sizes);
     }
 
     /**
@@ -182,13 +182,9 @@ trait FileManager
     {
         $rotation = $rotation ? $rotation : $idOrRotation;
 
-        $resolved = $this->resolveRelation(func_get_args());
+        $resolved = $this->resolveRelation(['relation' => $relationOrId, 'id' => $idOrRotation]);
 
-        $manager = $this->getFileManager($resolved->getRelationName());
-
-        $model = $resolved->find();
-
-        return $manager->rotate($model, $rotation);
+        return $resolved->rotate($rotation);
     }
 
     /**
@@ -199,41 +195,26 @@ trait FileManager
      */
     public function fileManagerUpdateNames($relationOrId, $id = null)
     {
-        $resolved = $this->resolveRelation(func_get_args());
+        $resolved = $this->resolveRelation(['relation' => $relationOrId, 'id' => $id]);
 
-        $manager = $this->getFileManager($resolved->getRelationName());
-
-        $model = $resolved->find();
-
-        return $manager->updateFileNames($model);
+        return $resolved->updateFileNames();
     }
 
     /**
      * @param array $args
      * @return ResolvedRelation
+     * @throws \RGilyov\FileManager\FileManagerException
      */
     protected function resolveRelation(array $args)
     {
-        if (count($args) === 1) {
-            $relationName = '';
-            $id           = isset($args[0]) ? $args[0] : null;
-        } else {
-            $relationName = $args[0];
-            $id           = ( int )$args[1];
-        }
+        $id   = is_numeric($args['relation']) ? $args['relation'] : $args['id'];
+        $name = is_string($args['relation']) ? $args['relation'] : '';
 
-        $relation = $this->getFileRelation($relationName);
+        $method   = $this->getFileRelationMethod($name);
+        $relation = $this->{$method}();
+        $manager  = $this->getFileManager($method);
 
-        return new ResolvedRelation($id, $relation, $relationName);
-    }
-
-    /**
-     * @param $relation
-     * @return mixed
-     */
-    public function getFileRelation($relation)
-    {
-        return $this->{$this->getFileRelationMethod($relation)}();
+        return new ResolvedRelation($id, $relation, $method, $manager);
     }
 
     /**
@@ -254,7 +235,7 @@ trait FileManager
             }
         }
 
-        return $this->{array_keys($this->fileManagerOptions)[0]}();
+        return array_keys($this->fileManagerOptions)[0];
     }
 
     /**
@@ -267,6 +248,8 @@ trait FileManager
         $created = collect([]);
         foreach ($this->fileManagerOptions as $method => &$options) {
             if (isset($attributes[$options['request_binding']])) {
+                $this->deleteOldFileIfExists($method);
+
                 $created->offsetSet(
                     $options['request_binding'],
                     $this->createFileAction($attributes[$options['request_binding']], $method)
@@ -275,6 +258,28 @@ trait FileManager
         }
 
         return $created;
+    }
+
+    /**
+     * @param $method
+     * @return bool|mixed
+     * @throws \Exception
+     * @throws \RGilyov\FileManager\FileManagerException
+     */
+    protected function deleteOldFileIfExists($method)
+    {
+        /** @var $relation BelongsTo|Relation|Builder|QueryBuilder */
+        $relation = $this->{$method}();
+
+        if ($relation instanceof BelongsTo && $relation->exists()) {
+            $model = $relation->first();
+
+            $relation->dissociate()->save();
+
+            return $this->getFileManager($method)->delete($model);
+        }
+
+        return false;
     }
 
     /**
@@ -289,11 +294,11 @@ trait FileManager
             if (is_array($file)) {
                 $created = collect([]);
                 foreach ($file as $f) {
-                    $created->push($this->saveAndAssociateFile($f, $method, 'attach'));
+                    $created->push($this->saveAndAssociateFile($f, $method));
                 }
                 return $created;
             } else {
-                return $this->saveAndAssociateFile($file, $method, 'attach');
+                return $this->saveAndAssociateFile($file, $method);
             }
         } elseif ($this->{$method}() instanceof BelongsTo) {
             return $this->saveAndAssociateFile($file, $method);
@@ -316,20 +321,7 @@ trait FileManager
             $mediaModel->delete();
         }
 
-        return $this->saveAndAssociateFile($file, $method, 'associate');
-    }
-
-    /**
-     * @param UploadedFile $file
-     * @param $relation
-     * @return $this|Model
-     * @throws \RGilyov\FileManager\FileManagerException
-     */
-    protected function saveFile(UploadedFile $file, $relation)
-    {
-        $manager = $this->getFileManager($relation);
-
-        return $manager->create($file);
+        return $this->saveAndAssociateFile($file, $method);
     }
 
     /**
@@ -355,31 +347,17 @@ trait FileManager
     /**
      * @param $file
      * @param $method
-     * @param string $relationSaveMethod
-     * @return $this|bool|Model
+     * @return bool|mixed
+     * @throws \Exception
      * @throws \RGilyov\FileManager\FileManagerException
      */
-    protected function saveAndAssociateFile($file, $method, $relationSaveMethod = 'associate')
+    protected function saveAndAssociateFile($file, $method)
     {
         /** @var $result Model */
         if ($file instanceof UploadedFile) {
-            $options = $this->fileManagerOptions[$method];
+            $resolved = $this->resolveRelation(['id' => 0, 'relation' => $method]);
 
-            $fileModel = $this->saveFile($file, $method);
-
-            if (isset($options['data']) && ! empty($options['data'])) {
-                $fileModel->fill($options['data']);
-            }
-
-            $fileModel->save();
-
-            $result = $this->{$method}()->{$relationSaveMethod}($fileModel);
-
-            if ($relationSaveMethod == 'associate') {
-                $result->update();
-            }
-
-            return $fileModel;
+            return $resolved->save($file, Arr::get($this->fileManagerOptions, "{$method}.data"));
         }
 
         return false;

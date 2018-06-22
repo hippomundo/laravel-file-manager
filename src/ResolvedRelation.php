@@ -10,6 +10,7 @@ use RGilyov\FileManager\Interfaces\Mediable;
 use RGilyov\FileManager\Models\File;
 use RGilyov\FileManager\Models\Media;
 use RGilyov\FileManager\Models\Video;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Class ResolvedRelation
@@ -33,13 +34,22 @@ class ResolvedRelation
     protected $relationName;
 
     /**
-     * ResolvedRelation constructor.
-     * @param $relation
-     * @param $id
+     * @var BaseManager
      */
-    public function __construct($id, $relation, $relationName)
+    protected $manager;
+
+    /**
+     * ResolvedRelation constructor.
+     * @param $id
+     * @param $relation
+     * @param $relationName
+     * @param BaseManager $manager
+     */
+    public function __construct($id, $relation, $relationName, BaseManager $manager)
     {
         $this->relation = $relation;
+
+        $this->manager = $manager;
 
         $this->relationName = $relationName;
 
@@ -85,6 +95,56 @@ class ResolvedRelation
     }
 
     /**
+     * @param UploadedFile $file
+     * @param array $data
+     * @return bool|mixed
+     * @throws FileManagerException
+     * @throws \Exception
+     */
+    public function save(UploadedFile $file, array $data = [])
+    {
+        $model = $this->manager->create($file);
+
+        if (empty($data)) {
+            $model->update($data);
+        }
+
+        return $this->associate($model);
+    }
+
+    /**
+     * @param $sizes
+     * @return Model|Mediable
+     */
+    public function resize($sizes)
+    {
+        $model = $this->find();
+
+        return $this->manager->resize($model, $sizes);
+    }
+
+    /**
+     * @param $rotation
+     * @return Mediable
+     */
+    public function rotate($rotation)
+    {
+        $model = $this->find();
+
+        return $this->manager->rotate($model, $rotation);
+    }
+
+    /**
+     * @return Model|Mediable
+     */
+    public function updateFileNames()
+    {
+        $model = $this->find();
+
+        return $this->manager->updateFileNames($model);
+    }
+
+    /**
      * @return bool|null
      * @throws \Exception
      */
@@ -99,7 +159,27 @@ class ResolvedRelation
                 $this->relation->dissociate()->save();
             }
 
-            return $model->delete();
+            return $this->manager->delete($model);
+        }
+
+        return false;
+    }
+
+    /**
+     * @param Mediable|Model $model
+     * @return bool|mixed
+     * @throws \Exception
+     */
+    public function associate(Mediable $model)
+    {
+        if ($this->isMedia($model)) {
+            if ($this->relation instanceof BelongsToMany) {
+                $this->relation->attach($model->id);
+            } elseif($this->relation instanceof BelongsTo) {
+                $this->relation->associate($model)->save();
+            }
+
+            return $model;
         }
 
         return false;

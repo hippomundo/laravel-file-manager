@@ -45,7 +45,7 @@ interface Manager
      * @param $sizes
      * @return Model
      */
-    public function resize(Mediable $model, ...$sizes);
+    public function resize(Mediable $model, $sizes);
 
     /**
      * @param Mediable $model

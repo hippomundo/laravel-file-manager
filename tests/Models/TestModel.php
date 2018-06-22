@@ -46,7 +46,8 @@ class TestModel extends Model
                     [
                         'image_size' => ['width' => 1000, 'height' => 500],
                         'thumbnail'  => ['width' => 100, 'height' => 100],
-                        'directory'  => 'photos'
+                        'directory'  => 'photos',
+                        "update_file_names_on_change" => false
                     ]
             ],
             'video',

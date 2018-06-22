@@ -34,7 +34,7 @@ class FileManagerTest extends BaseTestCase
         $photos = $testModel->photos()->get();
 
         $this->assertTrue($photo instanceof Media);
-        $this->assertTrue($photos->count() === 3);
+        $this->assertTrue($photos->count() === 2);
 
         $this->assertTrue(Storage::exists($photo->path));
         $this->assertTrue(Storage::exists($photo->thumbnail_path));
@@ -49,19 +49,101 @@ class FileManagerTest extends BaseTestCase
         /*
          * Resize images
          */
+        $resize = [
+            'thumbnail'  => ['width' => 50, 'height' => 10],
+            'image_size' => ['width' => 1000, 'height' => 1000]
+        ];
 
-        $testModel->fileManagerResize('photo', ['width' => 50, 'height' => 10]);
+        $testModel->fileManagerResize($photo->id, $resize);
 
-        $newPhoto = $testModel->photo()->first();
+        $resizedPhoto = $testModel->photo()->first();
 
-        $this->assertTrue(Storage::exists($photo->path));
-        $this->assertTrue(Storage::exists($photo->thumbnail_path));
-        $this->assertTrue(Storage::exists($photo->original_path));
-        $this->assertTrue($photo->path !== $newPhoto->path);
-        $this->assertTrue($photo->thumbnail_path !== $newPhoto->thumbnail_path);
-        $this->assertTrue($photo->original_path !== $newPhoto->original_path);
+        $this->assertTrue(Storage::exists($resizedPhoto->path));
+        $this->assertTrue(Storage::exists($resizedPhoto->thumbnail_path));
+        $this->assertTrue(Storage::exists($resizedPhoto->original_path));
+        $this->assertTrue($photo->path === $resizedPhoto->path);
+        $this->assertTrue($photo->thumbnail_path === $resizedPhoto->thumbnail_path);
 
+        $manyPhoto = $photos->first();
 
+        $testModel->fileManagerResize('photos', $manyPhoto->id, $resize);
+
+        $this->assertTrue(Storage::exists($manyPhoto->path));
+        $this->assertTrue(Storage::exists($manyPhoto->thumbnail_path));
+        $this->assertTrue(Storage::exists($manyPhoto->original_path));
+        $this->assertTrue($manyPhoto->path !== $photo->path);
+        $this->assertTrue($manyPhoto->thumbnail_path !== $photo->thumbnail_path);
+
+        /*
+         * Rename files
+         */
+        $testModel->fileManagerUpdateNames($photo->id);
+
+        $renamedPhoto = $testModel->photo()->first();
+
+        $this->assertTrue(Storage::exists($renamedPhoto->path));
+        $this->assertTrue(Storage::exists($renamedPhoto->thumbnail_path));
+        $this->assertTrue(Storage::exists($renamedPhoto->original_path));
+        $this->assertTrue($resizedPhoto->path !== $renamedPhoto->path);
+        $this->assertTrue($resizedPhoto->thumbnail_path !== $renamedPhoto->thumbnail_path);
+
+        $testModel->fileManagerUpdateNames('photos', $manyPhoto->id);
+
+        $renamedManyPhoto = $testModel->photos()->first();
+
+        $this->assertTrue(Storage::exists($renamedManyPhoto->path));
+        $this->assertTrue(Storage::exists($renamedManyPhoto->thumbnail_path));
+        $this->assertTrue(Storage::exists($renamedManyPhoto->original_path));
+        $this->assertTrue($manyPhoto->path !== $renamedManyPhoto->path);
+        $this->assertTrue($manyPhoto->thumbnail_path !== $renamedManyPhoto->thumbnail_path);
+
+        /*
+         * Rotate image
+         */
+        $testModel->fileManagerRotateImage($photo->id, 90);
+
+        $rotatedPhoto = $testModel->photo()->first();
+
+        $this->assertTrue(Storage::exists($rotatedPhoto->path));
+        $this->assertTrue(Storage::exists($rotatedPhoto->thumbnail_path));
+        $this->assertTrue(Storage::exists($rotatedPhoto->original_path));
+        $this->assertTrue($rotatedPhoto->path === $renamedPhoto->path);
+        $this->assertTrue($rotatedPhoto->thumbnail_path === $renamedPhoto->thumbnail_path);
+
+        $testModel->fileManagerRotateImage('photos', $manyPhoto->id, 90);
+
+        $rotatedManyPhoto = $testModel->photos()->first();
+
+        $this->assertTrue(Storage::exists($rotatedManyPhoto->path));
+        $this->assertTrue(Storage::exists($rotatedManyPhoto->thumbnail_path));
+        $this->assertTrue(Storage::exists($rotatedManyPhoto->original_path));
+        $this->assertTrue($rotatedManyPhoto->path !== $manyPhoto->path);
+        $this->assertTrue($rotatedManyPhoto->thumbnail_path !== $manyPhoto->thumbnail_path);
+
+        /*
+         * Update image
+         */
+        $testModel->update(['photo' => clone $this->photo]);
+
+        $updatedPhoto = $testModel->photo()->first();
+
+        $this->assertTrue(Storage::exists($updatedPhoto->path));
+        $this->assertTrue(Storage::exists($updatedPhoto->thumbnail_path));
+        $this->assertTrue(Storage::exists($updatedPhoto->original_path));
+        $this->assertTrue($updatedPhoto->path !== $rotatedPhoto->path);
+        $this->assertTrue($updatedPhoto->thumbnail_path !== $rotatedPhoto->thumbnail_path);
+
+        /*
+         * Delete image
+         */
+        $testModel->fileManagerDeleteFile('photo');
+
+        $deleted = $testModel->photo()->first();
+
+        $this->assertTrue(is_null($deleted));
+        $this->assertFalse(Storage::exists($updatedPhoto->path));
+        $this->assertFalse(Storage::exists($updatedPhoto->thumbnail_path));
+        $this->assertFalse(Storage::exists($updatedPhoto->original_path));
     }
 
     /** @test */
