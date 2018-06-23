@@ -66,7 +66,8 @@ class VideoManager extends BaseManager
 
     /**
      * @param $original_path
-     * @return string
+     * @return mixed
+     * @throws FileManagerException
      */
     public function saveVideo($original_path)
     {
@@ -74,16 +75,15 @@ class VideoManager extends BaseManager
 
         $size = $this->getResize();
 
-        $resultPath = $this->resizeAndSaveVideo($original_path, $path, $size);
-
-        return ($resultPath === $original_path) ? $original_path : $resultPath;
+        return $this->resizeAndSaveVideo($original_path, $path, $size);
     }
 
     /**
      * @param $fromPath
      * @param $toPath
      * @param $size
-     * @return string
+     * @return mixed
+     * @throws FileManagerException
      */
     protected function resizeAndSaveVideo($fromPath, $toPath, $size)
     {
@@ -95,9 +95,7 @@ class VideoManager extends BaseManager
         exec($exec, $output, $return_var);
 
         if ($return_var !== 0 || ! Storage::exists($toPath)) {
-            $this->deleteFile($toPath);
-
-            return $fromPath;
+            $this->putFileToPath($toPath, Storage::get($fromPath));
         }
 
         return $toPath;
@@ -127,14 +125,7 @@ class VideoManager extends BaseManager
 
         $model->deleteVideo();
 
-        $resultPath = $this->resizeAndSaveVideo($model->original_path, $path, $size);
-
-        if ($resultPath === $model->original_path) {
-            $model->update([
-                'path' => $model->original_path,
-                'url'  => $model->getOriginal('original_url')
-            ]);
-        }
+        $this->resizeAndSaveVideo($model->original_path, $path, $size);
 
         return $model;
     }
