@@ -16,7 +16,7 @@ class FileManagerServiceProvider extends ServiceProvider
         $migrations = realpath(__DIR__.'/../database/migrations');
 
         if (method_exists($this, 'loadMigrationsFrom')) {
-            $this->loadMigrationFrom($migrations);
+            $this->loadMigrationsFrom($migrations);
         } else {
             $this->publishes([$migrations => database_path().'/migrations']);
         }
