@@ -7,6 +7,19 @@ use Illuminate\Support\ServiceProvider;
 class FileManagerServiceProvider extends ServiceProvider
 {
     /**
+     * @var bool
+     */
+    protected static $testingMode = false;
+
+    /**
+     * @param $value
+     */
+    public static function test($value)
+    {
+        static::$testingMode = $value;
+    }
+
+    /**
      * Bootstrap any application services.
      *
      * @return void
@@ -17,6 +30,10 @@ class FileManagerServiceProvider extends ServiceProvider
 
         if (method_exists($this, 'loadMigrationsFrom')) {
             $this->loadMigrationsFrom($migrations);
+
+            if (static::$testingMode) {
+                $this->loadMigrationsFrom(realpath(__DIR__.'/../../tests/database/migrations'));
+            }
         } else {
             $this->publishes([$migrations => database_path().'/migrations']);
         }

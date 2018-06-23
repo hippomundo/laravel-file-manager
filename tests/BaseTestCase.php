@@ -39,17 +39,7 @@ abstract class BaseTestCase extends TestCase
     {
         parent::setUp();
 
-        if (method_exists($this, 'loadMigrationsFrom')) {
-            $this->loadMigrationsFrom(
-                realpath(__DIR__.'/../src/database/migrations')
-            );
-
-            $this->loadMigrationsFrom(
-                realpath(__DIR__.'/database/migrations')
-            );
-
-            $this->artisan('migrate', ['--database' => 'testbench']);
-        } else {
+        try {
             $this->artisan(
                 'migrate',
                 ['--database' => 'testbench', '--realpath' => realpath(__DIR__.'/../src/database/migrations')]
@@ -58,6 +48,8 @@ abstract class BaseTestCase extends TestCase
                 'migrate',
                 ['--database' => 'testbench', '--realpath' => realpath(__DIR__.'/database/migrations')]
             );
+        } catch (\Exception $e) {
+            $this->artisan('migrate', ['--database' => 'testbench']);
         }
 
         $this->photo = $this->generateUploadedFile('test_image.png');
@@ -95,6 +87,8 @@ abstract class BaseTestCase extends TestCase
      */
     protected function getPackageProviders($app)
     {
+        FileManagerServiceProvider::test(true);
+        
         return [
             FileManagerServiceProvider::class,
         ];
