@@ -39,14 +39,24 @@ abstract class BaseTestCase extends TestCase
     {
         parent::setUp();
 
-        $this->artisan(
-            'migrate',
-            ['--database' => 'testbench', '--path' => realpath(__DIR__.'/../src/database/migrations')]
-        );
-        $this->artisan(
-            'migrate',
-            ['--database' => 'testbench', '--path' => realpath(__DIR__.'/database/migrations')]
-        );
+        if (method_exists($this, 'loadMigrationsFrom')) {
+            $this->loadMigrationsFrom(
+                realpath(__DIR__.'/../src/database/migrations')
+            );
+
+            $this->loadMigrationsFrom(
+                realpath(__DIR__.'/database/migrations')
+            );
+        } else {
+            $this->artisan(
+                'migrate',
+                ['--database' => 'testbench', '--realpath' => realpath(__DIR__.'/../src/database/migrations')]
+            );
+            $this->artisan(
+                'migrate',
+                ['--database' => 'testbench', '--realpath' => realpath(__DIR__.'/database/migrations')]
+            );
+        }
 
         $this->photo = $this->generateUploadedFile('test_image.png');
         $this->video = $this->generateUploadedFile('test_video.mp4');
