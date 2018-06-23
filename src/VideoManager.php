@@ -74,7 +74,9 @@ class VideoManager extends BaseManager
 
         $size = $this->getResize();
 
-        return $this->resizeAndSaveVideo($original_path, $path, $size);
+        $resultPath = $this->resizeAndSaveVideo($original_path, $path, $size);
+
+        return ($resultPath === $original_path) ? $original_path : $resultPath;
     }
 
     /**
@@ -130,7 +132,7 @@ class VideoManager extends BaseManager
         if ($resultPath === $model->original_path) {
             $model->update([
                 'path' => $model->original_path,
-                'url'  => $model->original_url
+                'url'  => $model->getOriginal('original_url')
             ]);
         }
 
