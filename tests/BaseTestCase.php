@@ -41,11 +41,11 @@ abstract class BaseTestCase extends TestCase
 
         $this->artisan(
             'migrate',
-            ['--database' => 'testbench', '--realpath' => realpath(__DIR__.'/../src/database/migrations')]
+            ['--database' => 'testbench', '--path' => realpath(__DIR__.'/../src/database/migrations')]
         );
         $this->artisan(
             'migrate',
-            ['--database' => 'testbench', '--realpath' => realpath(__DIR__.'/database/migrations')]
+            ['--database' => 'testbench', '--path' => realpath(__DIR__.'/database/migrations')]
         );
 
         $this->photo = $this->generateUploadedFile('test_image.png');
