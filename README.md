@@ -130,3 +130,15 @@ manipulate uploaded files:
         'my_videos' => [UploadedFile $video, UploadedFile $video]
     ]);
 ```
+
+In order to resize videos you'll need to install HandBrake on your
+system: 
+https://handbrake.fr/docs/en/1.1.0/get-handbrake/download-and-install.html
+
+```
+
+    sudo add-apt-repository ppa:stebbins/handbrake-releases
+    
+    sudo apt install handbrake-gtk handbrake-cli
+    
+```
