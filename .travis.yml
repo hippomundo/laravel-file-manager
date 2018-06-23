@@ -14,6 +14,7 @@ matrix:
 before_script:
     - composer self-update
     - composer require orchestra/testbench:${TESTBENCH_VERSION} --no-update
+    - composer require orchestra/database:${TESTBENCH_VERSION} --no-update
     - composer require phpunit/phpunit:${PHPUNIT_VERSION} --no-update
     - composer install --prefer-source --no-interaction --dev
 
