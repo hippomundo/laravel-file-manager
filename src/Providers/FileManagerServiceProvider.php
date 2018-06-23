@@ -13,9 +13,13 @@ class FileManagerServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->publishes([
-            realpath(__DIR__.'/../database/migrations') => database_path().'/migrations',
-        ]);
+        $migrations = realpath(__DIR__.'/../database/migrations');
+
+        if (method_exists($this, 'loadMigrationsFrom')) {
+            $this->loadMigrationFrom($migrations);
+        } else {
+            $this->publishes([$migrations => database_path().'/migrations']);
+        }
 
         $this->publishes([
             __DIR__.'/../config/file-manager.php' => config_path('file-manager.php')
