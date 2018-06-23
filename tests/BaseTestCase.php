@@ -88,7 +88,7 @@ abstract class BaseTestCase extends TestCase
     protected function getPackageProviders($app)
     {
         FileManagerServiceProvider::test(true);
-        
+
         return [
             FileManagerServiceProvider::class,
         ];
