@@ -48,6 +48,11 @@ abstract class BaseManager implements ManagerContract
     protected $model;
 
     /**
+     * @var string
+     */
+    protected $tmpDirectory = 'tmp';
+
+    /**
      * FileManager constructor.
      */
     public function __construct()
@@ -155,6 +160,7 @@ abstract class BaseManager implements ManagerContract
     public function moveOriginal(UploadedFile $file)
     {
         $path = $this->mainFolder($file);
+
         $name = $this->originalName($file);
 
         $path = $this->glueDirParts($path, $name);
@@ -342,9 +348,99 @@ abstract class BaseManager implements ManagerContract
      * @param $path
      * @return string
      */
-    public function fullPath($path)
+    public function localFullPath($path)
     {
-        return $this->glueDirParts(Storage::disk()->getDriver()->getAdapter()->getPathPrefix(), $path);
+        return $this->glueDirParts($this->localFullPathPrefix(), $path);
+    }
+
+    /**
+     * @param $path
+     * @return string
+     */
+    public function removePrefixFromLocalPath($path)
+    {
+        return ltrim(str_replace($this->localFullPathPrefix(), '', $path), $this->sep);
+    }
+
+    /**
+     * @return string
+     */
+    public function localFullPathPrefix()
+    {
+        return Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCloud()
+    {
+        $diskName = config("filesystems.default");
+
+        $disk = config("filesystems.disks.{$diskName}");
+
+        $driver = Arr::get($disk, 'driver');
+
+        return strcasecmp($driver, 'local') !== 0;
+    }
+
+    /**
+     * @param $file
+     * @return string
+     */
+    protected function makeTmpFile($file)
+    {
+        if ($file instanceof UploadedFile) {
+            return $file;
+        }
+
+        if ($this->isCloud()) {
+            $contents = Storage::get($file);
+
+            $tmpPath = $this->generateTmpPath($file);
+
+            Storage::disk('local')->put($tmpPath, $contents);
+
+            return $this->localFullPath($tmpPath);
+        }
+
+        return $file;
+    }
+
+    /**
+     * @param $path
+     * @return string
+     */
+    public function generateTmpPath($path)
+    {
+        if ($this->isCloud()) {
+            return $this->generateUniquePathFromExisting(
+                $this->glueDirParts($this->tmpDirectory, $this->baseName($path))
+            );
+        }
+
+        return $path;
+    }
+
+    /**
+     * @param $file
+     * @return bool
+     */
+    protected function deleteTmpFile($file)
+    {
+        if (! is_string($file)) {
+            return false;
+        }
+
+        $file = $this->removePrefixFromLocalPath($file);
+
+        if (strpos($file, $this->tmpDirectory) === 0) {
+            if (Storage::disk('local')->exists($file)) {
+                return Storage::disk('local')->delete($file);
+            }
+        }
+
+        return false;
     }
 
     /**

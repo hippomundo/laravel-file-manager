@@ -188,7 +188,11 @@ class MediaManager extends BaseManager
 
             $image = new ImageManager();
 
-            $contents = ( string )$image->make($this->fullPath($path))->rotate($this->rotationValue($value))->encode();
+            $tmpFile = $this->makeTmpFile($path);
+
+            $contents = ( string )$image->make($tmpFile)->rotate($this->rotationValue($value))->encode();
+
+            $this->deleteTmpFile($tmpFile);
 
             $this->deleteFile($path);
 
@@ -304,13 +308,17 @@ class MediaManager extends BaseManager
         } else {
             $image = new ImageManager();
 
-            $file = is_string($file) ? $this->fullPath($file) : $file;
+            $file = $this->makeTmpFile($file);
 
-            return (string) $image->make($file)
+            $contents = (string) $image->make($file)
                 ->resize($width, $height, function ($constraint) {
                     $constraint->aspectRatio();
                 })
                 ->encode();
+
+            $this->deleteTmpFile($file);
+
+            return $contents;
         }
     }
 }

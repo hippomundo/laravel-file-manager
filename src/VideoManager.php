@@ -87,16 +87,23 @@ class VideoManager extends BaseManager
      */
     protected function resizeAndSaveVideo($fromPath, $toPath, $size)
     {
-        $execFromPath = $this->fullPath($fromPath);
-        $execToPath   = $this->fullPath($toPath);
+        $execFromPath = $this->makeTmpFile($fromPath);
+
+        $tmpToPath = $this->generateTmpPath($toPath);
+
+        $execToPath = $this->localFullPath($tmpToPath);
 
         $exec = "/usr/bin/HandBrakeCLI -O -Z \"Fast {$size}\" -i {$execFromPath} -o {$execToPath}";
 
         exec($exec, $output, $return_var);
 
-        if ($return_var !== 0 || ! Storage::exists($toPath)) {
+        if ($return_var !== 0) {
             $this->putFileToPath($toPath, Storage::get($fromPath));
+        } elseif($this->isCloud())  {
+            $this->putFileToPath($toPath, Storage::disk('local')->get($tmpToPath));
         }
+
+        $this->deleteTmpFile($execToPath);
 
         return $toPath;
     }
