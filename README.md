@@ -29,7 +29,7 @@ php artisan migrate
 ## Basic usage ##
 
 Before start we need to implement `RGilyov\FileManager\Models\FileManager`
-trait into out model:
+trait into your model:
 
 ```
     use RGilyov\FileManager\Models\FileManager;
