@@ -4,6 +4,7 @@ namespace RGilyov\FileManager\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use RGilyov\FileManager\FileManagerHelpers;
 use RGilyov\FileManager\Interfaces\Mediable;
 
 /**
@@ -38,7 +39,7 @@ class File extends Model implements Mediable
      */
     public function getUrlAttribute($url)
     {
-        return asset($url);
+        return FileManagerHelpers::fileUrl($url);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace RGilyov\FileManager;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
@@ -43,7 +44,7 @@ abstract class BaseManager implements ManagerContract
     protected $sep;
 
     /**
-     * @var Model|Mediable
+     * @var Model|Mediable|Builder
      */
     protected $model;
 
@@ -149,7 +150,7 @@ abstract class BaseManager implements ManagerContract
      */
     public function getStorageName()
     {
-        return strtolower(class_basename(Storage::getDriver()));
+        return FileManagerHelpers::diskName();
     }
 
     /**
@@ -163,7 +164,7 @@ abstract class BaseManager implements ManagerContract
 
         $name = $this->originalName($file);
 
-        $path = $this->glueDirParts($path, $name);
+        $path = FileManagerHelpers::glueParts($path, $name);
 
         $this->putFileToPath($path, $file);
 
@@ -272,16 +273,6 @@ abstract class BaseManager implements ManagerContract
     }
 
     /**
-     * @param $part1
-     * @param $part2
-     * @return string
-     */
-    public function glueDirParts($part1, $part2)
-    {
-        return rtrim($part1, $this->sep) . $this->sep . ltrim($part2, $this->sep);
-    }
-
-    /**
      * @param $file
      * @return string
      */
@@ -289,7 +280,7 @@ abstract class BaseManager implements ManagerContract
     {
         $name = Str::slug(Str::random(), '_') . "." . $this->extension($file);
 
-        $path = $this->glueDirParts($this->mainFolder($file), $name);
+        $path = FileManagerHelpers::glueParts($this->mainFolder($file), $name);
 
         if (Storage::exists($path)) {
             return $this->generateUniquePath($file);
@@ -305,11 +296,12 @@ abstract class BaseManager implements ManagerContract
     public function generateUniquePathFromExisting($path)
     {
         $baseName  = $this->dirName($path);
+
         $extension = $this->extension($path);
 
         $name = Str::slug(Str::random(), '_') . "." . $extension;
 
-        $uniquePath = $this->glueDirParts($baseName, $name);
+        $uniquePath = FileManagerHelpers::glueParts($baseName, $name);
 
         if (Storage::exists($uniquePath)) {
             return $this->generateUniquePathFromExisting($uniquePath);
@@ -350,7 +342,7 @@ abstract class BaseManager implements ManagerContract
      */
     public function localFullPath($path)
     {
-        return $this->glueDirParts($this->localFullPathPrefix(), $path);
+        return FileManagerHelpers::glueParts($this->localFullPathPrefix(), $path);
     }
 
     /**
@@ -367,21 +359,9 @@ abstract class BaseManager implements ManagerContract
      */
     public function localFullPathPrefix()
     {
-        return Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix();
-    }
+        $storage = FileManagerHelpers::isCloud() ? Storage::disk('local') : Storage::disk();
 
-    /**
-     * @return bool
-     */
-    public function isCloud()
-    {
-        $diskName = config("filesystems.default");
-
-        $disk = config("filesystems.disks.{$diskName}");
-
-        $driver = Arr::get($disk, 'driver');
-
-        return strcasecmp($driver, 'local') !== 0;
+        return $storage->getDriver()->getAdapter()->getPathPrefix();
     }
 
     /**
@@ -394,7 +374,7 @@ abstract class BaseManager implements ManagerContract
             return $file;
         }
 
-        if ($this->isCloud()) {
+        if (FileManagerHelpers::isCloud()) {
             $contents = Storage::get($file);
 
             $tmpPath = $this->generateTmpPath($file);
@@ -404,7 +384,7 @@ abstract class BaseManager implements ManagerContract
             return $this->localFullPath($tmpPath);
         }
 
-        return $file;
+        return $this->localFullPath($file);
     }
 
     /**
@@ -413,9 +393,9 @@ abstract class BaseManager implements ManagerContract
      */
     public function generateTmpPath($path)
     {
-        if ($this->isCloud()) {
+        if (FileManagerHelpers::isCloud()) {
             return $this->generateUniquePathFromExisting(
-                $this->glueDirParts($this->tmpDirectory, $this->baseName($path))
+                FileManagerHelpers::glueParts($this->tmpDirectory, $this->baseName($path))
             );
         }
 

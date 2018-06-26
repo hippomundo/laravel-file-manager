@@ -99,7 +99,7 @@ class VideoManager extends BaseManager
 
         if ($return_var !== 0) {
             $this->putFileToPath($toPath, Storage::get($fromPath));
-        } elseif($this->isCloud())  {
+        } elseif(FileManagerHelpers::isCloud())  {
             $this->putFileToPath($toPath, Storage::disk('local')->get($tmpToPath));
         }
 
