@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Collection;
 use RGilyov\FileManager\Interfaces\Mediable;
 use RGilyov\FileManager\Models\File;
 use RGilyov\FileManager\Models\Media;
@@ -24,7 +25,7 @@ class ResolvedRelation
     protected $id;
 
     /**
-     * @var Relation
+     * @var Relation|BelongsTo|BelongsToMany
      */
     protected $relation;
 
@@ -81,14 +82,22 @@ class ResolvedRelation
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Collection|Model|Mediable
+     * @return BaseManager
+     */
+    public function getManager()
+    {
+        return $this->manager;
+    }
+
+    /**
+     * @return Collection
      */
     public function find()
     {
         if ($this->relation instanceof BelongsToMany) {
-            return $this->relation->find($this->id);
+            return $this->id ? collect([$this->relation->find($this->id)]) : $this->relation->get();
         } elseif ($this->relation instanceof BelongsTo) {
-            return $this->relation->first();
+            return collect([$this->relation->first()]);
         }
 
         return null;
@@ -114,45 +123,45 @@ class ResolvedRelation
 
     /**
      * @param $sizes
-     * @return Model|Mediable
+     * @return Collection
      */
     public function resize($sizes)
     {
-        $model = $this->find();
-
-        return $this->manager->resize($model, $sizes);
+        return $this->find()->transform(function (Model $model) use ($sizes) {
+            /** @var $model Mediable */
+            return $this->manager->resize($model, $sizes);
+        });
     }
 
     /**
      * @param $rotation
-     * @return Mediable
+     * @return Collection
      */
     public function rotate($rotation)
     {
-        $model = $this->find();
-
-        return $this->manager->rotate($model, $rotation);
+        return $this->find()->transform(function (Model $model) use ($rotation) {
+            /** @var $model Mediable */
+            return $this->manager->rotate($model, $rotation);
+        });
     }
 
     /**
-     * @return Model|Mediable
+     * @return Collection
      */
     public function updateFileNames()
     {
-        $model = $this->find();
-
-        return $this->manager->updateFileNames($model);
+        return $this->find()->transform(function (Model $model) {
+            /** @var $model Mediable */
+            return $this->manager->updateFileNames($model);
+        });
     }
 
     /**
-     * @return bool|null
-     * @throws \Exception
+     * @return bool
      */
     public function delete()
     {
-        $model = $this->find();
-
-        if ($this->isMedia($model)) {
+        return $this->find()->transform(function (Model $model) {
             if ($this->relation instanceof BelongsToMany) {
                 $this->relation->detach($model->id);
             } elseif($this->relation instanceof BelongsTo) {
@@ -160,9 +169,9 @@ class ResolvedRelation
             }
 
             return $this->manager->delete($model);
-        }
-
-        return false;
+        })->reduce(function ($carry, $item) {
+            return $carry && $item;
+        }, true);
     }
 
     /**

@@ -290,38 +290,19 @@ trait FileManager
      */
     protected function createFileAction($file, $method)
     {
-        if ($this->{$method}() instanceof BelongsToMany) {
-            if (is_array($file)) {
-                $created = collect([]);
-                foreach ($file as $f) {
-                    $created->push($this->saveAndAssociateFile($f, $method));
-                }
-                return $created;
-            } else {
-                return $this->saveAndAssociateFile($file, $method);
-            }
-        } elseif ($this->{$method}() instanceof BelongsTo) {
-            return $this->saveAndAssociateFile($file, $method);
+        if (! method_exists($this, $method)) {
+            return false;
         }
 
-        return false;
-    }
+        $created = collect([]);
 
-    /**
-     * @param $file
-     * @param $method
-     * @return File|bool|Media|Video
-     * @throws \Exception
-     */
-    protected function updateOrSaveFile($file, $method)
-    {
-        /** @var $mediaModel Model */
+        $file = is_array($file) ? $file : [$file];
 
-        if (($mediaModel = $this->{$method}()->first()) && ResolvedRelation::isMedia($mediaModel)) {
-            $mediaModel->delete();
+        foreach ($file as $f) {
+            $created->push($this->saveAndAssociateFile($f, $method));
         }
 
-        return $this->saveAndAssociateFile($file, $method);
+        return $created;
     }
 
     /**

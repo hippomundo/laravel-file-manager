@@ -171,6 +171,15 @@ class FileManagerTest extends BaseTestCase
             $this->assertTrue(Storage::exists($model->thumbnail_path));
             $this->assertTrue(Storage::exists($model->original_path));
         });
+
+        /*
+         * Delete all
+         */
+        $testModel->fileManagerDeleteFile('photos');
+
+        $photos = $testModel->photos()->get();
+
+        $this->assertTrue($photos->count() === 0);
     }
 
     /** @test */
@@ -289,6 +298,15 @@ class FileManagerTest extends BaseTestCase
             $this->assertTrue(Storage::exists($model->path));
             $this->assertTrue(Storage::exists($model->original_path));
         });
+
+        /*
+         * Delete all
+         */
+        $testModel->fileManagerDeleteFile('videos');
+
+        $videos = $testModel->videos()->get();
+
+        $this->assertTrue($videos->count() === 0);
     }
 
     /** @test */
@@ -381,5 +399,14 @@ class FileManagerTest extends BaseTestCase
         $files->each(function (File $model) {
             $this->assertTrue(Storage::exists($model->path));
         });
+
+        /*
+         * Delete all
+         */
+        $testModel->fileManagerDeleteFile('files');
+
+        $files = $testModel->files()->get();
+
+        $this->assertTrue($files->count() === 0);
     }
 }
