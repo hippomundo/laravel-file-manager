@@ -31,6 +31,7 @@ class FileManager extends BaseManager
     /**
      * @param UploadedFile $file
      * @return array
+     * @throws FileManagerException
      */
     protected function saveFile(UploadedFile $file)
     {

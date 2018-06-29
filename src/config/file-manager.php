@@ -12,6 +12,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Backup files into another disk if set
+    |--------------------------------------------------------------------------
+    |
+    | You may specify a disk that can be used to backup all uploaded files here.
+    | It might be useful when a cloud being used on the system, so if the cloud
+    | will not work because of any reasons you may still load files from, for
+    | example, `local` disk.
+    |
+    */
+
+    'backup_disk' => null,
+
+    /*
+    |--------------------------------------------------------------------------
     | Media configurations
     |--------------------------------------------------------------------------
     |

@@ -54,6 +54,11 @@ abstract class BaseManager implements ManagerContract
     protected $tmpDirectory = 'tmp';
 
     /**
+     * @var array
+     */
+    protected $storage = [];
+
+    /**
      * FileManager constructor.
      */
     public function __construct()
@@ -265,7 +270,7 @@ abstract class BaseManager implements ManagerContract
             . ($this->preFolder ? $this->preFolder . $this->sep : "")
             . $this->fileName($file) . ($index ? "_{$index}" : "");
 
-        if (! $skipCheck && Storage::exists($dir)) {
+        if (! $skipCheck && StorageManager::exists($dir)) {
             return $this->mainFolder($file, ++$index);
         }
 
@@ -282,7 +287,7 @@ abstract class BaseManager implements ManagerContract
 
         $path = FileManagerHelpers::glueParts($this->mainFolder($file), $name);
 
-        if (Storage::exists($path)) {
+        if (StorageManager::exists($path)) {
             return $this->generateUniquePath($file);
         }
 
@@ -303,7 +308,7 @@ abstract class BaseManager implements ManagerContract
 
         $uniquePath = FileManagerHelpers::glueParts($baseName, $name);
 
-        if (Storage::exists($uniquePath)) {
+        if (StorageManager::exists($uniquePath)) {
             return $this->generateUniquePathFromExisting($uniquePath);
         }
 
@@ -318,7 +323,7 @@ abstract class BaseManager implements ManagerContract
      */
     public function renameFile($path, $newPath)
     {
-        if (Storage::exists($path)) {
+        if (StorageManager::exists($path)) {
             return Storage::move($path, $newPath);
         }
 
@@ -331,7 +336,7 @@ abstract class BaseManager implements ManagerContract
      */
     public function checkOriginal($path)
     {
-        if (! Storage::exists($path)) {
+        if (! StorageManager::exists($path)) {
             throw new FileManagerException('Original file does not exists');
         }
     }
@@ -424,6 +429,63 @@ abstract class BaseManager implements ManagerContract
     }
 
     /**
+     * @param $path
+     * @return bool
+     */
+    public function deleteFile($path)
+    {
+        if (StorageManager::exists($path)) {
+            return Storage::delete($path);
+        }
+
+        return false;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Model management
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @param Mediable|Model $model
+     * @return mixed
+     * @throws \Exception
+     */
+    public function delete(Mediable $model)
+    {
+        $model->deleteFile();
+
+        $dirName = $this->dirName($model->path);
+
+        if (StorageManager::exists($dirName)) {
+            Storage::deleteDirectory($dirName);
+        }
+
+        return $model->delete();
+    }
+
+    /**
+     * @param Mediable $model
+     * @param $value
+     * @return Mediable
+     */
+    public function rotate(Mediable $model, $value)
+    {
+        return $model;
+    }
+
+    /**
+     * @param Mediable $model
+     * @param array $sizes
+     * @return Model|Mediable
+     */
+    public function resize(Mediable $model, $sizes)
+    {
+        return $model;
+    }
+
+    /**
      * @param UploadedFile $file
      * @return $this|\Illuminate\Database\Eloquent\Model
      * @throws FileManagerException
@@ -451,56 +513,5 @@ abstract class BaseManager implements ManagerContract
         $model->deleteFile();
 
         return $model->update($this->saveFile($file));
-    }
-
-    /**
-     * @param $path
-     * @return bool
-     */
-    public function deleteFile($path)
-    {
-        if (Storage::exists($path)) {
-            return Storage::delete($path);
-        }
-
-        return false;
-    }
-
-    /**
-     * @param Mediable|Model $model
-     * @return mixed
-     * @throws \Exception
-     */
-    public function delete(Mediable $model)
-    {
-        $model->deleteFile();
-
-        $dirName = $this->dirName($model->path);
-
-        if (Storage::exists($dirName)) {
-            Storage::deleteDirectory($dirName);
-        }
-
-        return $model->delete();
-    }
-
-    /**
-     * @param Mediable $model
-     * @param $value
-     * @return Mediable
-     */
-    public function rotate(Mediable $model, $value)
-    {
-        return $model;
-    }
-
-    /**
-     * @param Mediable $model
-     * @param array $sizes
-     * @return Model|Mediable
-     */
-    public function resize(Mediable $model, $sizes)
-    {
-        return $model;
     }
 }

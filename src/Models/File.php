@@ -3,9 +3,9 @@
 namespace RGilyov\FileManager\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 use RGilyov\FileManager\FileManagerHelpers;
 use RGilyov\FileManager\Interfaces\Mediable;
+use RGilyov\FileManager\StorageManager;
 
 /**
  * Class File
@@ -47,8 +47,6 @@ class File extends Model implements Mediable
      */
     public function deleteFile()
     {
-        if (Storage::exists($this->path)) {
-            Storage::delete($this->path);
-        }
+        StorageManager::delete($this->path);
     }
 }

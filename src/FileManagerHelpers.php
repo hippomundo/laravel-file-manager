@@ -3,8 +3,11 @@
 namespace RGilyov\FileManager;
 
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Storage;
 
+/**
+ * Class FileManagerHelpers
+ * @package RGilyov\FileManager
+ */
 class FileManagerHelpers
 {
     /**
@@ -17,6 +20,24 @@ class FileManagerHelpers
         $driver = Arr::get($disk, 'driver');
 
         return strcasecmp($driver, 'local') !== 0;
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public static function getBackUpDiskName()
+    {
+        $backupDiskName = config('file-manager.backup_disk');
+
+        $configurations = config("filesystems.disks.{$backupDiskName}");
+
+        if (is_null($configurations)) {
+            return null;
+        }
+
+        $mainDiskName = static::diskName();
+
+        return ($mainDiskName === $backupDiskName) ? null : $backupDiskName;
     }
 
     /**
@@ -43,15 +64,11 @@ class FileManagerHelpers
      */
     public static function fileUrl($fileUrl)
     {
-        try {
-            return Storage::url($fileUrl);
-        } catch (\Exception $e) {
-            $disk = static::diskConfigurations();
+        $disk = static::diskConfigurations();
 
-            $url = Arr::get($disk, 'url');
+        $url = Arr::get($disk, 'url');
 
-            return $url ? static::glueParts($url, $fileUrl, true) : asset($fileUrl);
-        }
+        return $url ? static::glueParts($url, $fileUrl, true) : asset($fileUrl);
     }
 
     /**

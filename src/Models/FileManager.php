@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 use \Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
@@ -136,7 +135,7 @@ trait FileManager
     /**
      * @param $relationOrId
      * @param null $id
-     * @return \Illuminate\Database\Eloquent\Collection|Model|\RGilyov\FileManager\Interfaces\Mediable
+     * @return Collection
      * @throws \RGilyov\FileManager\FileManagerException
      */
     public function fileManagerFindFile($relationOrId, $id = null)
@@ -159,7 +158,7 @@ trait FileManager
      * @param $relationOrId
      * @param null $idOrSizes
      * @param array|null $sizes
-     * @return Model|\RGilyov\FileManager\Interfaces\Mediable
+     * @return Collection
      * @throws \RGilyov\FileManager\FileManagerException
      */
     public function fileManagerResize($relationOrId, $idOrSizes = null, array $sizes = null)
@@ -174,8 +173,8 @@ trait FileManager
     /**
      * @param $relationOrId
      * @param null $idOrRotation
-     * @param array|null $rotation
-     * @return \RGilyov\FileManager\Interfaces\Mediable
+     * @param null $rotation
+     * @return Collection
      * @throws \RGilyov\FileManager\FileManagerException
      */
     public function fileManagerRotateImage($relationOrId, $idOrRotation = null, $rotation = null)
@@ -190,7 +189,7 @@ trait FileManager
     /**
      * @param $relationOrId
      * @param null $id
-     * @return \RGilyov\FileManager\Interfaces\Mediable
+     * @return Collection
      * @throws \RGilyov\FileManager\FileManagerException
      */
     public function fileManagerUpdateNames($relationOrId, $id = null)
