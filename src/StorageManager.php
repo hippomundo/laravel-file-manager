@@ -50,10 +50,10 @@ class StorageManager
 
         static::$main_disk = FileManagerHelpers::diskName();
 
-        return static::$disks = [
+        return static::$disks = array_filter([
             static::MAIN_DISK   => Storage::disk(static::$main_disk),
             static::BACKUP_DISK => static::getBackUpDisk() ? Storage::disk(static::$backup_disk) : null
-        ];
+        ]);
     }
 
     /**

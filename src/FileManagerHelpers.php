@@ -59,6 +59,20 @@ class FileManagerHelpers
     }
 
     /**
+     * @return mixed|null
+     */
+    public function backUpDiskConfigurations()
+    {
+        $backupDiskName = static::getBackUpDiskName();
+
+        if (! $backupDiskName) {
+            return null;
+        }
+
+        return config("filesystems.disks.{$backupDiskName}");
+    }
+
+    /**
      * @param $fileUrl
      * @return string
      */
