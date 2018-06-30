@@ -1,6 +1,6 @@
 <?php
 
-namespace RGilyov\FileManager;
+namespace RGilyov\FileManager\Exceptions;
 
 /**
  * Class FileManagerException

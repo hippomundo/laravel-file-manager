@@ -72,8 +72,8 @@ class FileManager extends BaseManager
 
     /**
      * @param Mediable|File $model
-     * @return Mediable
-     * @throws FileManagerException
+     * @return \Illuminate\Database\Eloquent\Model|Mediable
+     * @throws Exceptions\FileManagerException
      */
     public function updateFileNames(Mediable $model)
     {

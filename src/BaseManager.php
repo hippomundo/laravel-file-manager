@@ -4,6 +4,7 @@ namespace RGilyov\FileManager;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\File;
+use RGilyov\FileManager\Exceptions\FileManagerException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Database\Eloquent\Model;
@@ -37,24 +38,9 @@ abstract class BaseManager implements ManagerContract
     protected $config = [];
 
     /**
-     * @var string
-     */
-    protected $sep;
-
-    /**
      * @var Model|Mediable|Builder
      */
     protected $model;
-
-    /**
-     * @var string
-     */
-    protected $tmpDirectory = 'tmp';
-
-    /**
-     * @var array
-     */
-    protected $storage = [];
 
     /**
      * FileManager constructor.
@@ -196,9 +182,11 @@ abstract class BaseManager implements ManagerContract
             return $this->loadedMainFolder;
         }
 
-        $dir = $this->mainFolder . $this->sep
-            . Arr::get($this->config, 'directory') . $this->sep
-            . ($this->preFolder ? $this->preFolder . $this->sep : "")
+        $sep = DIRECTORY_SEPARATOR;
+
+        $dir = $this->mainFolder . $sep
+            . Arr::get($this->config, 'directory') . $sep
+            . ($this->preFolder ? $this->preFolder . $sep : "")
             . StorageManager::fileName($file) . ($index ? "_{$index}" : "");
 
         if (! $skipCheck && StorageManager::exists($dir)) {
@@ -211,14 +199,10 @@ abstract class BaseManager implements ManagerContract
     /**
      * @param $path
      * @param $newPath
-     * @return mixed
-     * @throws FileManagerException
      */
     public function renameFile($path, $newPath)
     {
         StorageManager::move($path, $newPath);
-
-        throw new FileManagerException('Was not able to rename the file, it does not exists.');
     }
 
     /**

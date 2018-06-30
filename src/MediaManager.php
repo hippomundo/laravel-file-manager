@@ -3,6 +3,7 @@
 namespace RGilyov\FileManager;
 
 use Illuminate\Support\Facades\File;
+use RGilyov\FileManager\Exceptions\FileManagerException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
 use Intervention\Image\ImageManager;
@@ -73,6 +74,7 @@ class MediaManager extends BaseManager
      * @param Mediable|Media $model
      * @param array $sizes
      * @return \Illuminate\Database\Eloquent\Model|Mediable
+     * @throws Exceptions\FileManagerException
      * @throws FileManagerException
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
@@ -134,8 +136,7 @@ class MediaManager extends BaseManager
 
     /**
      * @param Mediable|Media $model
-     * @return Mediable
-     * @throws FileManagerException
+     * @return \Illuminate\Database\Eloquent\Model|Mediable
      */
     public function updateFileNames(Mediable $model)
     {
@@ -157,7 +158,6 @@ class MediaManager extends BaseManager
      * @param Mediable|Media $model
      * @param $value
      * @return Mediable
-     * @throws FileManagerException
      * @throws \Exception
      */
     public function rotate(Mediable $model, $value)
@@ -265,7 +265,7 @@ class MediaManager extends BaseManager
      */
     protected function resizeAndSave($file, $sizes)
     {
-        $path = StorageManager::generateUniquePath($file);
+        $path = StorageManager::generateUniquePath($file, $this->mainFolder($file));
 
         $resized = $this->resizeFile($file, $sizes);
 

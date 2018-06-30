@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
+use RGilyov\FileManager\Exceptions\FileManagerException;
 use RGilyov\FileManager\Interfaces\Mediable;
 use RGilyov\FileManager\Models\File;
 use RGilyov\FileManager\Models\Media;

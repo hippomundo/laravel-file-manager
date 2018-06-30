@@ -4,6 +4,7 @@ namespace RGilyov\FileManager;
 
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
+use RGilyov\FileManager\Exceptions\FileManagerException;
 use RGilyov\FileManager\Interfaces\Mediable;
 use RGilyov\FileManager\Models\File;
 use RGilyov\FileManager\Models\Media;

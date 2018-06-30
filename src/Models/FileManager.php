@@ -7,6 +7,7 @@ use \Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use RGilyov\FileManager\Exceptions\FileManagerException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -82,6 +83,7 @@ trait FileManager
     /**
      * @param array $attributes
      * @return Model|FileManager
+     * @throws FileManagerException
      * @throws \Exception
      */
     public static function create(array $attributes = [])
@@ -101,6 +103,7 @@ trait FileManager
      * @param array $attributes
      * @param array $options
      * @return bool
+     * @throws FileManagerException
      * @throws \Exception
      */
     public function update(array $attributes = [], array $options = [])
@@ -119,6 +122,7 @@ trait FileManager
     /**
      * @param array $attributes
      * @return bool|Collection
+     * @throws FileManagerException
      * @throws \Exception
      */
     public function fileManagerSaveFiles(array $attributes)
@@ -136,7 +140,7 @@ trait FileManager
      * @param $relationOrId
      * @param null $id
      * @return Collection
-     * @throws \RGilyov\FileManager\FileManagerException
+     * @throws FileManagerException
      */
     public function fileManagerFindFile($relationOrId, $id = null)
     {
@@ -159,7 +163,7 @@ trait FileManager
      * @param null $idOrSizes
      * @param array|null $sizes
      * @return Collection
-     * @throws \RGilyov\FileManager\FileManagerException
+     * @throws FileManagerException
      */
     public function fileManagerResize($relationOrId, $idOrSizes = null, array $sizes = null)
     {
@@ -175,7 +179,7 @@ trait FileManager
      * @param null $idOrRotation
      * @param null $rotation
      * @return Collection
-     * @throws \RGilyov\FileManager\FileManagerException
+     * @throws FileManagerException
      */
     public function fileManagerRotateImage($relationOrId, $idOrRotation = null, $rotation = null)
     {
@@ -190,7 +194,7 @@ trait FileManager
      * @param $relationOrId
      * @param null $id
      * @return Collection
-     * @throws \RGilyov\FileManager\FileManagerException
+     * @throws FileManagerException
      */
     public function fileManagerUpdateNames($relationOrId, $id = null)
     {
@@ -202,7 +206,7 @@ trait FileManager
     /**
      * @param array $args
      * @return ResolvedRelation
-     * @throws \RGilyov\FileManager\FileManagerException
+     * @throws FileManagerException
      */
     protected function resolveRelation(array $args)
     {
@@ -240,6 +244,7 @@ trait FileManager
     /**
      * @param array $attributes
      * @return Collection
+     * @throws FileManagerException
      * @throws \Exception
      */
     protected function checkRequestFieldsAndCreateOrUpdateFile(array $attributes)
@@ -262,8 +267,8 @@ trait FileManager
     /**
      * @param $method
      * @return bool|mixed
+     * @throws FileManagerException
      * @throws \Exception
-     * @throws \RGilyov\FileManager\FileManagerException
      */
     protected function deleteOldFileIfExists($method)
     {
@@ -284,7 +289,8 @@ trait FileManager
     /**
      * @param $file
      * @param $method
-     * @return File|Media|Video|bool|Collection
+     * @return bool|Collection
+     * @throws FileManagerException
      * @throws \Exception
      */
     protected function createFileAction($file, $method)
@@ -307,7 +313,7 @@ trait FileManager
     /**
      * @param $relation
      * @return \RGilyov\FileManager\FileManager|\RGilyov\FileManager\MediaManager|\RGilyov\FileManager\VideoManager
-     * @throws \RGilyov\FileManager\FileManagerException
+     * @throws FileManagerException
      */
     protected function getFileManager($relation)
     {
@@ -328,8 +334,8 @@ trait FileManager
      * @param $file
      * @param $method
      * @return bool|mixed
+     * @throws FileManagerException
      * @throws \Exception
-     * @throws \RGilyov\FileManager\FileManagerException
      */
     protected function saveAndAssociateFile($file, $method)
     {

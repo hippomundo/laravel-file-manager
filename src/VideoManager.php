@@ -98,8 +98,10 @@ class VideoManager extends BaseManager
 
             if ($return_var !== 0) {
                 $this->putFileToPath($toPath, StorageManager::get($fromPath));
-            } elseif(FileManagerHelpers::isCloud())  {
+            } else {
                 $this->putFileToPath($toPath, StorageManager::getTmpDisk()->get($tmpToPath));
+
+                StorageManager::deleteTmpFile($tmpToPath);
             }
 
             return $toPath;
@@ -118,7 +120,7 @@ class VideoManager extends BaseManager
      * @param Mediable|Video $model
      * @param array $sizes
      * @return \Illuminate\Database\Eloquent\Model|Mediable
-     * @throws FileManagerException
+     * @throws Exceptions\FileManagerException
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function resize(Mediable $model, $sizes)
@@ -138,8 +140,7 @@ class VideoManager extends BaseManager
 
     /**
      * @param Mediable|Video $model
-     * @return Mediable
-     * @throws FileManagerException
+     * @return \Illuminate\Database\Eloquent\Model|Mediable
      */
     public function updateFileNames(Mediable $model)
     {
