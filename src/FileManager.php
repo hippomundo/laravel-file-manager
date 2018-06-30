@@ -31,19 +31,18 @@ class FileManager extends BaseManager
     /**
      * @param UploadedFile $file
      * @return array
-     * @throws FileManagerException
      */
     protected function saveFile(UploadedFile $file)
     {
-        $type           = $file->getMimeType();
-        $file_size      = $file->getClientSize();
-        $folder_path    = $this->mainFolder($file);
-        $original_name  = $this->originalName($file);
-        $storage        = $this->getStorageName();
-        $extension      = $this->extension($file);
-        $hash           = $this->makeHash($original_name);
-        $path           = $this->moveFile($file);
-        $url            = $this->pathToUrl($path);
+        $type          = $file->getMimeType();
+        $file_size     = $file->getClientSize();
+        $folder_path   = $this->mainFolder($file);
+        $original_name = StorageManager::originalName($file);
+        $storage       = $this->getStorageName();
+        $extension     = StorageManager::extension($file);
+        $hash          = $this->makeHash($original_name);
+        $path          = $this->moveFile($file);
+        $url           = $this->pathToUrl($path);
 
         return compact(
             'path',
@@ -61,11 +60,10 @@ class FileManager extends BaseManager
     /**
      * @param UploadedFile $file
      * @return string
-     * @throws FileManagerException
      */
     protected function moveFile(UploadedFile $file)
     {
-        $path = $this->generateUniquePath($file);
+        $path = StorageManager::generateUniquePath($file, $this->mainFolder($file));
 
         $this->putFileToPath($path, $file);
 
@@ -79,7 +77,7 @@ class FileManager extends BaseManager
      */
     public function updateFileNames(Mediable $model)
     {
-        $path = $this->generateUniquePathFromExisting($model->path);
+        $path = StorageManager::generateUniquePath($model->path);
 
         $this->renameFile($model->path, $path);
 

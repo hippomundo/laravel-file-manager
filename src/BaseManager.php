@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use RGilyov\FileManager\Interfaces\Mediable;
 use \RGilyov\FileManager\Interfaces\Manager as ManagerContract;
@@ -161,13 +159,12 @@ abstract class BaseManager implements ManagerContract
     /**
      * @param UploadedFile $file
      * @return string
-     * @throws FileManagerException
      */
     public function moveOriginal(UploadedFile $file)
     {
         $path = $this->mainFolder($file);
 
-        $name = $this->originalName($file);
+        $name = StorageManager::originalName($file);
 
         $path = FileManagerHelpers::glueParts($path, $name);
 
@@ -179,78 +176,12 @@ abstract class BaseManager implements ManagerContract
     /**
      * @param $path
      * @param $contents
-     * @throws FileManagerException
      */
     public function putFileToPath($path, $contents)
     {
         $contents = $contents instanceof UploadedFile ? File::get($contents) : $contents;
 
-        if (! Storage::put($path, $contents)) {
-            throw new FileManagerException('Was not able to save image');
-        }
-    }
-
-    /**
-     * @param UploadedFile $file
-     * @return string
-     */
-    public function originalName(UploadedFile $file)
-    {
-        return Str::slug(
-            pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), '_'
-        ) . "." . $this->extension($file);
-    }
-
-    /**
-     * @param $path
-     * @return string
-     */
-    public function fileName($path)
-    {
-        if ($path instanceof UploadedFile) {
-            $path = $this->originalName($path);
-        }
-
-        return pathinfo($path, PATHINFO_FILENAME);
-    }
-
-    /**
-     * @param $path
-     * @return string
-     */
-    public function baseName($path)
-    {
-        if ($path instanceof UploadedFile) {
-            $path = $this->originalName($path);
-        }
-
-        return pathinfo($path, PATHINFO_BASENAME);
-    }
-
-    /**
-     * @param $path
-     * @return string
-     */
-    public function dirName($path)
-    {
-        if ($path instanceof UploadedFile) {
-            $path = $this->originalName($path);
-        }
-
-        return pathinfo($path, PATHINFO_DIRNAME);
-    }
-
-    /**
-     * @param $path
-     * @return mixed
-     */
-    public function extension($path)
-    {
-        if ($path instanceof UploadedFile) {
-            $path = $path->getClientOriginalName();
-        }
-
-        return pathinfo($path, PATHINFO_EXTENSION);
+        StorageManager::put($path, $contents);
     }
 
     /**
@@ -268,51 +199,13 @@ abstract class BaseManager implements ManagerContract
         $dir = $this->mainFolder . $this->sep
             . Arr::get($this->config, 'directory') . $this->sep
             . ($this->preFolder ? $this->preFolder . $this->sep : "")
-            . $this->fileName($file) . ($index ? "_{$index}" : "");
+            . StorageManager::fileName($file) . ($index ? "_{$index}" : "");
 
         if (! $skipCheck && StorageManager::exists($dir)) {
             return $this->mainFolder($file, ++$index);
         }
 
         return $this->loadedMainFolder = $dir;
-    }
-
-    /**
-     * @param $file
-     * @return string
-     */
-    public function generateUniquePath($file)
-    {
-        $name = Str::slug(Str::random(), '_') . "." . $this->extension($file);
-
-        $path = FileManagerHelpers::glueParts($this->mainFolder($file), $name);
-
-        if (StorageManager::exists($path)) {
-            return $this->generateUniquePath($file);
-        }
-
-        return $path;
-    }
-
-    /**
-     * @param $path
-     * @return string
-     */
-    public function generateUniquePathFromExisting($path)
-    {
-        $baseName  = $this->dirName($path);
-
-        $extension = $this->extension($path);
-
-        $name = Str::slug(Str::random(), '_') . "." . $extension;
-
-        $uniquePath = FileManagerHelpers::glueParts($baseName, $name);
-
-        if (StorageManager::exists($uniquePath)) {
-            return $this->generateUniquePathFromExisting($uniquePath);
-        }
-
-        return $uniquePath;
     }
 
     /**
@@ -323,9 +216,7 @@ abstract class BaseManager implements ManagerContract
      */
     public function renameFile($path, $newPath)
     {
-        if (StorageManager::exists($path)) {
-            return Storage::move($path, $newPath);
-        }
+        StorageManager::move($path, $newPath);
 
         throw new FileManagerException('Was not able to rename the file, it does not exists.');
     }
@@ -339,106 +230,6 @@ abstract class BaseManager implements ManagerContract
         if (! StorageManager::exists($path)) {
             throw new FileManagerException('Original file does not exists');
         }
-    }
-
-    /**
-     * @param $path
-     * @return string
-     */
-    public function localFullPath($path)
-    {
-        return FileManagerHelpers::glueParts($this->localFullPathPrefix(), $path);
-    }
-
-    /**
-     * @param $path
-     * @return string
-     */
-    public function removePrefixFromLocalPath($path)
-    {
-        return ltrim(str_replace($this->localFullPathPrefix(), '', $path), $this->sep);
-    }
-
-    /**
-     * @return string
-     */
-    public function localFullPathPrefix()
-    {
-        $storage = FileManagerHelpers::isCloud() ? Storage::disk('local') : Storage::disk();
-
-        return $storage->getDriver()->getAdapter()->getPathPrefix();
-    }
-
-    /**
-     * @param $file
-     * @return string
-     */
-    protected function makeTmpFile($file)
-    {
-        if ($file instanceof UploadedFile) {
-            return $file;
-        }
-
-        if (FileManagerHelpers::isCloud()) {
-            $contents = Storage::get($file);
-
-            $tmpPath = $this->generateTmpPath($file);
-
-            Storage::disk('local')->put($tmpPath, $contents);
-
-            return $this->localFullPath($tmpPath);
-        }
-
-        return $this->localFullPath($file);
-    }
-
-    /**
-     * @param $path
-     * @return string
-     */
-    public function generateTmpPath($path)
-    {
-        if (FileManagerHelpers::isCloud()) {
-            return $this->generateUniquePathFromExisting(
-                FileManagerHelpers::glueParts($this->tmpDirectory, $this->baseName($path))
-            );
-        }
-
-        return $path;
-    }
-
-    /**
-     * @param $file
-     * @return bool
-     */
-    protected function deleteTmpFile($file)
-    {
-        if (! is_string($file)) {
-            return false;
-        }
-
-        $file = $this->removePrefixFromLocalPath($file);
-
-        if (strpos($file, $this->tmpDirectory) === 0) {
-            if (Storage::disk('local')->exists($file)) {
-                return Storage::disk('local')->delete($file);
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @param $path
-     * @return bool
-     */
-    public function deleteFile($path)
-    {
-        if (StorageManager::exists($path)) {
-            return Storage::delete($path);
-        }
-
-        return false;
     }
 
     /*
@@ -456,11 +247,9 @@ abstract class BaseManager implements ManagerContract
     {
         $model->deleteFile();
 
-        $dirName = $this->dirName($model->path);
+        $dirName = StorageManager::dirName($model->path);
 
-        if (StorageManager::exists($dirName)) {
-            Storage::deleteDirectory($dirName);
-        }
+        StorageManager::deleteDirectory($dirName);
 
         return $model->delete();
     }

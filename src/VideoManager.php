@@ -2,7 +2,6 @@
 
 namespace RGilyov\FileManager;
 
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
 use RGilyov\FileManager\Interfaces\Mediable;
@@ -33,21 +32,21 @@ class VideoManager extends BaseManager
     /**
      * @param UploadedFile $file
      * @return array
-     * @throws FileManagerException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     protected function saveFile(UploadedFile $file)
     {
-        $type           = $file->getMimeType();
-        $file_size      = $file->getClientSize();
-        $folder_path    = $this->mainFolder($file);
-        $original_name  = $this->originalName($file);
-        $storage        = $this->getStorageName();
-        $extension      = $this->extension($file);
-        $hash           = $this->makeHash($original_name);
-        $original_path  = $this->moveOriginal($file);
-        $original_url   = $this->pathToUrl($original_path);
-        $path           = $this->saveVideo($original_path);
-        $url            = $this->pathToUrl($path);
+        $type          = $file->getMimeType();
+        $file_size     = $file->getClientSize();
+        $folder_path   = $this->mainFolder($file);
+        $original_name = StorageManager::originalName($file);
+        $storage       = $this->getStorageName();
+        $extension     = StorageManager::extension($file);
+        $hash          = $this->makeHash($original_name);
+        $original_path = $this->moveOriginal($file);
+        $original_url  = $this->pathToUrl($original_path);
+        $path          = $this->saveVideo($original_path);
+        $url           = $this->pathToUrl($path);
 
         return compact(
             'original_path',
@@ -67,11 +66,11 @@ class VideoManager extends BaseManager
     /**
      * @param $original_path
      * @return mixed
-     * @throws FileManagerException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function saveVideo($original_path)
     {
-        $path = $this->generateUniquePathFromExisting($original_path);
+        $path = StorageManager::generateUniquePath($original_path);
 
         $size = $this->getResize();
 
@@ -83,29 +82,28 @@ class VideoManager extends BaseManager
      * @param $toPath
      * @param $size
      * @return mixed
-     * @throws FileManagerException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     protected function resizeAndSaveVideo($fromPath, $toPath, $size)
     {
-        $execFromPath = $this->makeTmpFile($fromPath);
+        return StorageManager::tmpScope($fromPath, function ($tmp) use ($fromPath, $toPath, $size) {
 
-        $tmpToPath = $this->generateTmpPath($toPath);
+            $tmpToPath = StorageManager::generateTmpPath($toPath);
 
-        $execToPath = $this->localFullPath($tmpToPath);
+            $execToPath = StorageManager::tmpFullPath($tmpToPath);
 
-        $exec = "/usr/bin/HandBrakeCLI -O -Z \"Fast {$size}\" -i {$execFromPath} -o {$execToPath}";
+            $exec = "/usr/bin/HandBrakeCLI -O -Z \"Fast {$size}\" -i {$tmp} -o {$execToPath}";
 
-        exec($exec, $output, $return_var);
+            exec($exec, $output, $return_var);
 
-        if ($return_var !== 0) {
-            $this->putFileToPath($toPath, Storage::get($fromPath));
-        } elseif(FileManagerHelpers::isCloud())  {
-            $this->putFileToPath($toPath, Storage::disk('local')->get($tmpToPath));
-        }
+            if ($return_var !== 0) {
+                $this->putFileToPath($toPath, StorageManager::get($fromPath));
+            } elseif(FileManagerHelpers::isCloud())  {
+                $this->putFileToPath($toPath, StorageManager::getTmpDisk()->get($tmpToPath));
+            }
 
-        $this->deleteTmpFile($execToPath);
-
-        return $toPath;
+            return $toPath;
+        });
     }
 
     /**
@@ -121,6 +119,7 @@ class VideoManager extends BaseManager
      * @param array $sizes
      * @return \Illuminate\Database\Eloquent\Model|Mediable
      * @throws FileManagerException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function resize(Mediable $model, $sizes)
     {
@@ -144,7 +143,7 @@ class VideoManager extends BaseManager
      */
     public function updateFileNames(Mediable $model)
     {
-        $path = $this->generateUniquePathFromExisting($model->path);
+        $path = StorageManager::generateUniquePath($model->path);
 
         $this->renameFile($model->path, $path);
 

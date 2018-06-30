@@ -5,7 +5,6 @@ namespace RGilyov\FileManager;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManager;
 use RGilyov\FileManager\Interfaces\Mediable;
 use RGilyov\FileManager\Models\Media;
@@ -35,7 +34,7 @@ class MediaManager extends BaseManager
     /**
      * @param UploadedFile $file
      * @return array
-     * @throws FileManagerException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     protected function saveFile(UploadedFile $file)
     {
@@ -46,9 +45,9 @@ class MediaManager extends BaseManager
         $thumbnail_path = $this->saveThumbnail($file);
         $thumbnail_url  = $this->pathToUrl($thumbnail_path);
         $folder_path    = $this->mainFolder($file);
-        $original_name  = $this->originalName($file);
+        $original_name  = StorageManager::originalName($file);
         $storage        = $this->getStorageName();
-        $extension      = $this->extension($file);
+        $extension      = StorageManager::extension($file);
         $hash           = $this->makeHash($original_name);
         $original_path  = $this->moveOriginal($file);
         $original_url   = $this->pathToUrl($original_path);
@@ -75,6 +74,7 @@ class MediaManager extends BaseManager
      * @param array $sizes
      * @return \Illuminate\Database\Eloquent\Model|Mediable
      * @throws FileManagerException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function resize(Mediable $model, $sizes)
     {
@@ -87,13 +87,13 @@ class MediaManager extends BaseManager
 
         $model->deleteImage();
 
-        $this->saveImageFile($model->path, $resized);
+        $this->putFileToPath($model->path, $resized);
 
         $resized = $this->resizeFile($model->original_path, $thumbnailSizes);
 
         $model->deleteThumbnail();
 
-        $this->saveImageFile($model->thumbnail_path, $resized);
+        $this->putFileToPath($model->thumbnail_path, $resized);
 
         if ($this->updateNamesOnChange()) {
             return $this->updateFileNames($model);
@@ -139,8 +139,8 @@ class MediaManager extends BaseManager
      */
     public function updateFileNames(Mediable $model)
     {
-        $path           = $this->generateUniquePathFromExisting($model->path);
-        $thumbnail_path = $this->generateUniquePathFromExisting($model->thumbnail_path);
+        $path           = StorageManager::generateUniquePath($model->path);
+        $thumbnail_path = StorageManager::generateUniquePath($model->thumbnail_path);
 
         $this->renameFile($model->path, $path);
         $this->renameFile($model->thumbnail_path, $thumbnail_path);
@@ -184,19 +184,15 @@ class MediaManager extends BaseManager
      */
     public function rotatePath($path, $value)
     {
-        if (Storage::exists($path)) {
+        if (StorageManager::exists($path)) {
 
-            $image = new ImageManager();
+            StorageManager::tmpScope($path, function ($tmp) use ($value, $path) {
+                $image = new ImageManager();
 
-            $tmpFile = $this->makeTmpFile($path);
+                $contents = ( string )$image->make($tmp)->rotate($this->rotationValue($value))->encode();
 
-            $contents = ( string )$image->make($tmpFile)->rotate($this->rotationValue($value))->encode();
-
-            $this->deleteTmpFile($tmpFile);
-
-            $this->deleteFile($path);
-
-            $this->saveImageFile($path, $contents);
+                $this->putFileToPath($path, $contents);
+            });
 
             return $path;
         }
@@ -234,13 +230,13 @@ class MediaManager extends BaseManager
      */
     public function isSvg($file)
     {
-        return strcasecmp($this->extension($file), 'svg') === 0;
+        return strcasecmp(StorageManager::extension($file), 'svg') === 0;
     }
 
     /**
      * @param $file
      * @return string
-     * @throws FileManagerException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     protected function saveImage($file)
     {
@@ -252,7 +248,7 @@ class MediaManager extends BaseManager
     /**
      * @param $file
      * @return string
-     * @throws FileManagerException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     protected function saveThumbnail($file)
     {
@@ -265,33 +261,24 @@ class MediaManager extends BaseManager
      * @param $file
      * @param $sizes
      * @return string
-     * @throws FileManagerException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     protected function resizeAndSave($file, $sizes)
     {
-        $path = $this->generateUniquePath($file);
+        $path = StorageManager::generateUniquePath($file);
 
         $resized = $this->resizeFile($file, $sizes);
 
-        $this->saveImageFile($path, $resized);
+        $this->putFileToPath($path, $resized);
 
         return $path;
     }
 
     /**
-     * @param $path
-     * @param $contents
-     * @throws FileManagerException
-     */
-    protected function saveImageFile($path, $contents)
-    {
-        $this->putFileToPath($path, $contents);
-    }
-
-    /**
      * @param $file
      * @param null $sizes
-     * @return string
+     * @return mixed
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     protected function resizeFile($file, $sizes = null)
     {
@@ -306,19 +293,15 @@ class MediaManager extends BaseManager
         if ($this->isSvg($file)) {
             return File::get($file);
         } else {
-            $image = new ImageManager();
+            return StorageManager::tmpScope($file, function ($tmp) use ($width, $height) {
+                $image = new ImageManager();
 
-            $file = $this->makeTmpFile($file);
-
-            $contents = (string) $image->make($file)
-                ->resize($width, $height, function ($constraint) {
-                    $constraint->aspectRatio();
-                })
-                ->encode();
-
-            $this->deleteTmpFile($file);
-
-            return $contents;
+                return (string) $image->make($tmp)
+                    ->resize($width, $height, function ($constraint) {
+                        $constraint->aspectRatio();
+                    })
+                    ->encode();
+            });
         }
     }
 }
