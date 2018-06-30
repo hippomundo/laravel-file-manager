@@ -61,7 +61,7 @@ class FileManagerHelpers
     /**
      * @return mixed|null
      */
-    public function backUpDiskConfigurations()
+    public static function backUpDiskConfigurations()
     {
         $backupDiskName = static::getBackUpDiskName();
 
@@ -73,14 +73,29 @@ class FileManagerHelpers
     }
 
     /**
-     * @param $fileUrl
+     * @param $path
      * @return string
      */
-    public static function fileUrl($fileUrl)
+    public static function fileUrl($path)
     {
-        $disk = static::diskConfigurations();
+        $fileUrl = static::pathToUrl($path);
 
-        $url = Arr::get($disk, 'url');
+        if (
+            StorageManager::hasBackUpDisk()
+            && ! StorageManager::getDisk(StorageManager::MAIN_DISK)->exists($path)
+        ){
+            $backupDisk = StorageManager::getDisk(StorageManager::BACKUP_DISK);
+
+            if (method_exists($backupDisk, 'url')) {
+
+            }
+
+            $configurations = static::backUpDiskConfigurations();
+        } else {
+            $configurations = static::diskConfigurations();
+        }
+
+        $url = Arr::get($configurations, 'url');
 
         return $url ? static::glueParts($url, $fileUrl, true) : asset($fileUrl);
     }
@@ -96,5 +111,14 @@ class FileManagerHelpers
         $sep = $url ? '/' : DIRECTORY_SEPARATOR;
 
         return rtrim($part1, $sep) . $sep . ltrim($part2, $sep);
+    }
+
+    /**
+     * @param $path
+     * @return mixed
+     */
+    public static function pathToUrl($path)
+    {
+        return str_replace(DIRECTORY_SEPARATOR, '/', $path);
     }
 }

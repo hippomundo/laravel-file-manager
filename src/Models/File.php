@@ -23,7 +23,6 @@ class File extends Model implements Mediable
      */
     protected $fillable = [
         'path',
-        'url',
         "file_size",
         'folder_path',
         'original_name',
@@ -34,12 +33,11 @@ class File extends Model implements Mediable
     ];
 
     /**
-     * @param $url
      * @return string
      */
-    public function getUrlAttribute($url)
+    public function getUrlAttribute()
     {
-        return FileManagerHelpers::fileUrl($url);
+        return FileManagerHelpers::fileUrl($this->path);
     }
 
     /**

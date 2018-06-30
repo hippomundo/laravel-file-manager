@@ -42,26 +42,20 @@ class MediaManager extends BaseManager
         $type           = $file->getMimeType();
         $file_size      = $file->getClientSize();
         $path           = $this->saveImage($file);
-        $url            = $this->pathToUrl($path);
         $thumbnail_path = $this->saveThumbnail($file);
-        $thumbnail_url  = $this->pathToUrl($thumbnail_path);
         $folder_path    = $this->mainFolder($file);
         $original_name  = StorageManager::originalName($file);
         $storage        = $this->getStorageName();
         $extension      = StorageManager::extension($file);
         $hash           = $this->makeHash($original_name);
         $original_path  = $this->moveOriginal($file);
-        $original_url   = $this->pathToUrl($original_path);
 
         return compact(
             'type',
             'file_size',
             'path',
-            'url',
             'thumbnail_path',
-            'thumbnail_url',
             'original_path',
-            'original_url',
             'folder_path',
             'original_name',
             'storage',
@@ -146,10 +140,7 @@ class MediaManager extends BaseManager
         $this->renameFile($model->path, $path);
         $this->renameFile($model->thumbnail_path, $thumbnail_path);
 
-        $url           = $this->pathToUrl($path);
-        $thumbnail_url = $this->pathToUrl($thumbnail_path);
-
-        $model->update(compact('path', 'thumbnail_path', 'url', 'thumbnail_url'));
+        $model->update(compact('path', 'thumbnail_path'));
 
         return $model;
     }

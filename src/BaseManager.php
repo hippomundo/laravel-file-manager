@@ -51,8 +51,6 @@ abstract class BaseManager implements ManagerContract
 
         $this->config = $this->defaultConfig();
 
-        $this->sep = DIRECTORY_SEPARATOR;
-
         $this->mainFolder = config('file-manager.folder') ?: 'files';
     }
 
@@ -102,15 +100,6 @@ abstract class BaseManager implements ManagerContract
     public function getPreFolder()
     {
         return $this->preFolder;
-    }
-
-    /**
-     * @param $path
-     * @return mixed
-     */
-    public function pathToUrl($path)
-    {
-        return str_replace($this->sep, '/', $path);
     }
 
     /**

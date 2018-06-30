@@ -42,11 +42,9 @@ class FileManager extends BaseManager
         $extension     = StorageManager::extension($file);
         $hash          = $this->makeHash($original_name);
         $path          = $this->moveFile($file);
-        $url           = $this->pathToUrl($path);
 
         return compact(
             'path',
-            'url',
             "file_size",
             'folder_path',
             'original_name',
@@ -73,7 +71,6 @@ class FileManager extends BaseManager
     /**
      * @param Mediable|File $model
      * @return \Illuminate\Database\Eloquent\Model|Mediable
-     * @throws Exceptions\FileManagerException
      */
     public function updateFileNames(Mediable $model)
     {
@@ -81,9 +78,7 @@ class FileManager extends BaseManager
 
         $this->renameFile($model->path, $path);
 
-        $url = $this->pathToUrl($path);
-
-        $model->update(compact('path', 'url'));
+        $model->update(compact('path'));
 
         return $model;
     }

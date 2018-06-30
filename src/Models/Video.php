@@ -23,9 +23,7 @@ class Video extends Model implements Mediable
      */
     protected $fillable = [
         'original_path',
-        'original_url',
         'path',
-        'url',
         'folder_path',
         'original_name',
         'extension',
@@ -36,21 +34,19 @@ class Video extends Model implements Mediable
     ];
 
     /**
-     * @param $url
      * @return string
      */
-    public function getUrlAttribute($url)
+    public function getUrlAttribute()
     {
-        return FileManagerHelpers::fileUrl($url);
+        return FileManagerHelpers::fileUrl($this->path);
     }
 
     /**
-     * @param $url
      * @return string
      */
-    public function getThumbnailUrlAttribute($url)
+    public function getThumbnailUrlAttribute()
     {
-        return FileManagerHelpers::fileUrl($url);
+        return FileManagerHelpers::fileUrl($this->thumbnail_path);
     }
 
     /**

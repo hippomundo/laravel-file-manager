@@ -25,12 +25,9 @@ class Media extends Model implements Mediable
         "type",
         "file_size",
         "original_path",
-        "original_url",
         "path",
-        "url",
         "storage",
         "thumbnail_path",
-        "thumbnail_url",
         "status",
         'folder_path',
         'original_name',
@@ -39,30 +36,27 @@ class Media extends Model implements Mediable
     ];
 
     /**
-     * @param $url
      * @return string
      */
-    public function getOriginalUrlAttribute($url)
+    public function getOriginalUrlAttribute()
     {
-        return FileManagerHelpers::fileUrl($url);
+        return FileManagerHelpers::fileUrl($this->original_path);
     }
 
     /**
-     * @param $url
      * @return string
      */
-    public function getUrlAttribute($url)
+    public function getUrlAttribute()
     {
-        return FileManagerHelpers::fileUrl($url);
+        return FileManagerHelpers::fileUrl($this->path);
     }
 
     /**
-     * @param $thumbnail_url
      * @return string
      */
-    public function getThumbnailUrlAttribute($thumbnail_url)
+    public function getThumbnailUrlAttribute()
     {
-        return FileManagerHelpers::fileUrl($thumbnail_url);
+        return FileManagerHelpers::fileUrl($this->thumbnail_path);
     }
 
     /**

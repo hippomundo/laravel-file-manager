@@ -44,15 +44,11 @@ class VideoManager extends BaseManager
         $extension     = StorageManager::extension($file);
         $hash          = $this->makeHash($original_name);
         $original_path = $this->moveOriginal($file);
-        $original_url  = $this->pathToUrl($original_path);
         $path          = $this->saveVideo($original_path);
-        $url           = $this->pathToUrl($path);
 
         return compact(
             'original_path',
-            'original_url',
             'path',
-            'url',
             'folder_path',
             'original_name',
             'extension',
@@ -147,8 +143,6 @@ class VideoManager extends BaseManager
         $path = StorageManager::generateUniquePath($model->path);
 
         $this->renameFile($model->path, $path);
-
-        $url = $this->pathToUrl($path);
 
         $model->update(compact('path', 'url'));
 
