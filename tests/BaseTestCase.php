@@ -2,7 +2,7 @@
 
 namespace RGilyov\FileManager\Test;
 
-use Illuminate\Support\Facades\Storage;
+use RGilyov\FileManager\StorageManager;
 use RGilyov\FileManager\Test\File\UploadedFile;
 use Orchestra\Testbench\TestCase;
 use RGilyov\FileManager\Models\File;
@@ -109,6 +109,18 @@ abstract class BaseTestCase extends TestCase
             'database' => ':memory:',
             'prefix'   => '',
         ]);
+
+        $app['config']->set('file-manager.backup_disk', 'backup');
+        $app['config']->set('filesystems.disks', [
+            'backup' => [
+                'driver' => 'local',
+                'root'   => storage_path('backup'),
+            ],
+            'local' => [
+                'driver' => 'local',
+                'root'   => storage_path('app'),
+            ],
+        ]);
     }
 
     /**
@@ -128,7 +140,7 @@ abstract class BaseTestCase extends TestCase
             $model->delete();
         });
 
-        @Storage::deleteDirectory('files');
+        @StorageManager::deleteDirectory('files');
 
         parent::tearDown();
     }
