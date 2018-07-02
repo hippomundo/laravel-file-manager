@@ -26,18 +26,7 @@ trait FileManager
      *
      * @var array
      */
-    public $fileManagerOptions;
-
-    /**
-     * MediaTrait constructor.
-     * @param array $attributes
-     */
-    public function __construct(array $attributes = array())
-    {
-        parent::__construct($attributes);
-
-        $this->fileManagerOptions = $this->formatFileManagerOptions();
-    }
+    protected static $fileManagerOptions;
 
     /**
      * @return mixed
@@ -59,6 +48,18 @@ trait FileManager
                 'data'            => [],
             ]
         ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getFileManagerOptions()
+    {
+        if (! is_null(static::$fileManagerOptions)) {
+            return static::$fileManagerOptions;
+        }
+
+        return static::$fileManagerOptions = $this->formatFileManagerOptions();
     }
 
     /**
@@ -257,19 +258,21 @@ trait FileManager
      */
     public function getFileRelationMethod($relation)
     {
+        $options = $this->getFileManagerOptions();
+
         if ($relation && is_string($relation)) {
-            if (isset($this->fileManagerOptions[$relation])) {
+            if (isset($options[$relation])) {
                 return $relation;
             }
 
-            foreach ($this->fileManagerOptions as $method => $options) {
-                if ($relation == $options['request_binding']) {
+            foreach ($options as $method => $values) {
+                if ($relation == $values['request_binding']) {
                     return $method;
                 }
             }
         }
 
-        return array_keys($this->fileManagerOptions)[0];
+        return array_keys($options)[0];
     }
 
     /**
@@ -281,7 +284,7 @@ trait FileManager
     protected function checkRequestFieldsAndCreateOrUpdateFile(array $attributes)
     {
         $created = collect([]);
-        foreach ($this->fileManagerOptions as $method => &$options) {
+        foreach ($this->getFileManagerOptions() as $method => &$options) {
             if (isset($attributes[$options['request_binding']])) {
                 $this->deleteOldFileIfExists($method);
 
@@ -348,7 +351,9 @@ trait FileManager
      */
     protected function getFileManager($relation)
     {
-        $config = $this->fileManagerOptions[$relation]['config'];
+        $options = $this->getFileManagerOptions();
+
+        $config = $options[$relation]['config'];
 
         $manager = ManagerFactory::get($this->getRelationFromMethod($relation));
 
@@ -374,7 +379,7 @@ trait FileManager
         if ($file instanceof UploadedFile) {
             $resolved = $this->resolveRelation(['id' => 0, 'relation' => $method]);
 
-            return $resolved->save($file, Arr::get($this->fileManagerOptions, "{$method}.data"));
+            return $resolved->save($file, Arr::get($this->getFileManagerOptions(), "{$method}.data"));
         }
 
         return false;
