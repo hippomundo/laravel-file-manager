@@ -2,6 +2,7 @@
 
 namespace RGilyov\FileManager;
 
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Arr;
 
 /**
@@ -78,26 +79,40 @@ class FileManagerHelpers
      */
     public static function fileUrl($path)
     {
-        $fileUrl = static::pathToUrl($path);
+        $mainDisk = StorageManager::getDisk(StorageManager::MAIN_DISK);
 
-        if (
-            StorageManager::hasBackUpDisk()
-            && ! StorageManager::getDisk(StorageManager::MAIN_DISK)->exists($path)
-        ){
+        if (StorageManager::hasBackUpDisk() && ! $mainDisk->exists($path)) {
+            $config = static::backUpDiskConfigurations();
+
             $backupDisk = StorageManager::getDisk(StorageManager::BACKUP_DISK);
 
-            if (method_exists($backupDisk, 'url')) {
-
-            }
-
-            $configurations = static::backUpDiskConfigurations();
-        } else {
-            $configurations = static::diskConfigurations();
+            return static::returnFileUrl($backupDisk, $path, $config);
         }
 
-        $url = Arr::get($configurations, 'url');
+        $config = static::diskConfigurations();
 
-        return $url ? static::glueParts($url, $fileUrl, true) : asset($fileUrl);
+        return static::returnFileUrl($mainDisk, $path, $config);
+    }
+
+    /**
+     * @param FilesystemAdapter $disk
+     * @param $config
+     * @param $path
+     * @return string
+     */
+    protected static function returnFileUrl($disk, $path, $config)
+    {
+        $fileUrl = static::pathToUrl($path);
+
+        $url = Arr::get($config, 'url');
+
+        if ($url) {
+            return static::glueParts($url, $fileUrl, true);
+        } elseif(method_exists($disk, 'url')) {
+            return $disk->url($fileUrl);
+        }
+
+        return asset($fileUrl);
     }
 
     /**
