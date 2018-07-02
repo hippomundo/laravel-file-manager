@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use RGilyov\FileManager\Exceptions\FileManagerException;
 use RGilyov\FileManager\Interfaces\Mediable;
@@ -21,7 +22,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 class ResolvedRelation
 {
     /**
-     * @var int
+     * @var int|array
      */
     protected $id;
 
@@ -96,12 +97,25 @@ class ResolvedRelation
     public function find()
     {
         if ($this->relation instanceof BelongsToMany) {
-            return $this->id ? collect([$this->relation->find($this->id)]) : $this->relation->get();
+            if (! $this->id || is_array($this->id)) {
+
+                $models = $this->relation->get();
+
+                if (is_array($this->id)) {
+                    return $models->filter(function (Model $model) {
+                        return in_array($model->id, $this->id);
+                    });
+                }
+
+                return $models;
+            } elseif($this->id) {
+                return collect([$this->relation->find($this->id)]);
+            }
         } elseif ($this->relation instanceof BelongsTo) {
             return collect([$this->relation->first()]);
         }
 
-        return null;
+        return collect([]);
     }
 
     /**

@@ -2,7 +2,7 @@
 
 namespace RGilyov\CsvImporter\Test;
 
-use Illuminate\Support\Facades\Storage;
+use RGilyov\FileManager\StorageManager as Storage;
 use RGilyov\FileManager\Models\File;
 use RGilyov\FileManager\Models\Video;
 use RGilyov\FileManager\Test\BaseTestCase;
@@ -159,18 +159,30 @@ class FileManagerTest extends BaseTestCase
         $testModel->fileManagerSaveFiles([
             'photos'=> [
                 clone $this->photo,
+                clone $this->photo,
+                clone $this->photo,
+                clone $this->photo,
                 clone $this->photo
             ]
         ]);
 
         $photos = $testModel->photos()->get();
 
-        $this->assertTrue($photos->count() === 3);
+        $this->assertTrue($photos->count() === 6);
         $photos->each(function (Media $model) {
             $this->assertTrue(Storage::exists($model->path));
             $this->assertTrue(Storage::exists($model->thumbnail_path));
             $this->assertTrue(Storage::exists($model->original_path));
         });
+
+        /*
+         * Delete bulk
+         */
+        $testModel->fileManagerDeleteFile('photos', $photos->slice(0, 3)->pluck('id')->toArray());
+
+        $photos = $testModel->photos()->get();
+
+        $this->assertTrue($photos->count() === 3);
 
         /*
          * Delete all
@@ -287,17 +299,29 @@ class FileManagerTest extends BaseTestCase
         $testModel->fileManagerSaveFiles([
             'videos'=> [
                 clone $this->video,
+                clone $this->video,
+                clone $this->video,
+                clone $this->video,
                 clone $this->video
             ]
         ]);
 
         $videos = $testModel->videos()->get();
 
-        $this->assertTrue($videos->count() === 3);
+        $this->assertTrue($videos->count() === 6);
         $videos->each(function (Video $model) {
             $this->assertTrue(Storage::exists($model->path));
             $this->assertTrue(Storage::exists($model->original_path));
         });
+
+        /*
+         * Delete bulk
+         */
+        $testModel->fileManagerDeleteFile('videos', $videos->slice(0, 3)->pluck('id')->toArray());
+
+        $videos = $testModel->videos()->get();
+
+        $this->assertTrue($videos->count() === 3);
 
         /*
          * Delete all
@@ -389,16 +413,28 @@ class FileManagerTest extends BaseTestCase
         $testModel->fileManagerSaveFiles([
             'super_files' => [
                 clone $this->file,
+                clone $this->file,
+                clone $this->file,
+                clone $this->file,
                 clone $this->file
             ]
         ]);
 
         $files = $testModel->files()->get();
 
-        $this->assertTrue($files->count() === 3);
+        $this->assertTrue($files->count() === 6);
         $files->each(function (File $model) {
             $this->assertTrue(Storage::exists($model->path));
         });
+
+        /*
+         * Delete bulk
+         */
+        $testModel->fileManagerDeleteFile('files', $files->slice(0, 3)->pluck('id')->toArray());
+
+        $files = $testModel->files()->get();
+
+        $this->assertTrue($files->count() === 3);
 
         /*
          * Delete all
