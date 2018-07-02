@@ -202,6 +202,7 @@ class StorageManager
      * @param $path
      * @param $contents
      * @param null $visibility
+     * @throws \ReflectionException
      */
     public static function put($path, $contents, $visibility = null)
     {
@@ -210,8 +211,22 @@ class StorageManager
         /** @var $disk FilesystemAdapter */
 
         foreach ($disks as $disk) {
-            $disk->put($path, $contents, $visibility);
+            $disk->put($path, $contents, static::setDefaultParameterToPut($visibility));
         }
+    }
+
+    /**
+     * @param $visibility
+     * @return array
+     * @throws \ReflectionException
+     */
+    protected static function setDefaultParameterToPut($visibility)
+    {
+        $method  = new \ReflectionMethod(FilesystemAdapter::class, 'put');
+        $params  = $method->getParameters();
+        $default = last($params)->getDefaultValue();
+
+        return is_array($default) ? ( array )$visibility : $visibility;
     }
 
     /**
