@@ -7,6 +7,7 @@ use \Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Str;
 use RGilyov\FileManager\Exceptions\FileManagerException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
@@ -63,7 +64,7 @@ trait FileManager
     /**
      * @return array
      */
-    public function formatFileManagerOptions()
+    protected function formatFileManagerOptions()
     {
         $formattedOptions = [];
 
@@ -78,6 +79,20 @@ trait FileManager
         }
 
         return $formattedOptions;
+    }
+
+    /**
+     * @param array $config
+     * @param $methodKey
+     * @return array
+     */
+    protected function checkConfig(array $config, $methodKey)
+    {
+        if (! isset($config['directory'])) {
+            $config['directory'] = Str::snake($methodKey);
+        }
+
+        return $config;
     }
 
     /**
@@ -214,10 +229,26 @@ trait FileManager
         $name = is_string($args['relation']) ? $args['relation'] : '';
 
         $method   = $this->getFileRelationMethod($name);
-        $relation = $this->{$method}();
+        $relation = $this->getRelationFromMethod($method);
         $manager  = $this->getFileManager($method);
 
         return new ResolvedRelation($id, $relation, $method, $manager);
+    }
+
+    /**
+     * @param $method
+     * @return mixed
+     * @throws FileManagerException
+     */
+    public function getRelationFromMethod($method)
+    {
+        foreach ([$method, Str::snake($method), Str::camel($method), Str::studly($method)] as $relation) {
+            if (method_exists($this, $relation)) {
+                return $this->{$relation}();
+            }
+        }
+
+        throw new FileManagerException("The '{$method}' relation does not exists in the model.");
     }
 
     /**
@@ -273,7 +304,7 @@ trait FileManager
     protected function deleteOldFileIfExists($method)
     {
         /** @var $relation BelongsTo|Relation|Builder|QueryBuilder */
-        $relation = $this->{$method}();
+        $relation = $this->getRelationFromMethod($method);
 
         if ($relation instanceof BelongsTo && $relation->exists()) {
             $model = $relation->first();
@@ -319,7 +350,7 @@ trait FileManager
     {
         $config = $this->fileManagerOptions[$relation]['config'];
 
-        $manager = ManagerFactory::get($this->{$relation}());
+        $manager = ManagerFactory::get($this->getRelationFromMethod($relation));
 
         $manager->setPreFolder($this->fileManagerFolder());
 
