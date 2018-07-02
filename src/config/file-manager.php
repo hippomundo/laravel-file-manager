@@ -58,6 +58,13 @@ return [
     | Resize will work only if the HandBrake package installed on your server:
     | https://handbrake.fr/docs/en/1.1.0/get-handbrake/download-and-install.html
     |
+    | Possible resize values:
+    |   - 2160p60
+    |   - 1080p30
+    |   - 720p30
+    |   - 576p25
+    |   - 480p30
+    |
     */
 
     'video' => [
