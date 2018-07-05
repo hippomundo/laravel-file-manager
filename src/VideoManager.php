@@ -33,6 +33,7 @@ class VideoManager extends BaseManager
      * @param UploadedFile $file
      * @return array
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \ReflectionException
      */
     protected function saveFile(UploadedFile $file)
     {

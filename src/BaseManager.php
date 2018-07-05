@@ -134,6 +134,7 @@ abstract class BaseManager implements ManagerContract
     /**
      * @param UploadedFile $file
      * @return string
+     * @throws \ReflectionException
      */
     public function moveOriginal(UploadedFile $file)
     {
@@ -151,6 +152,7 @@ abstract class BaseManager implements ManagerContract
     /**
      * @param $path
      * @param $contents
+     * @throws \ReflectionException
      */
     public function putFileToPath($path, $contents)
     {

@@ -70,11 +70,13 @@ class FileManagerTest extends BaseTestCase
 
         $testModel->fileManagerResize('photos', $manyPhoto->id, $resize);
 
-        $this->assertTrue(Storage::exists($manyPhoto->path));
-        $this->assertTrue(Storage::exists($manyPhoto->thumbnail_path));
-        $this->assertTrue(Storage::exists($manyPhoto->original_path));
-        $this->assertTrue($manyPhoto->path !== $photo->path);
-        $this->assertTrue($manyPhoto->thumbnail_path !== $photo->thumbnail_path);
+        $resizedManyPhoto = $testModel->photos()->first();
+
+        $this->assertTrue(Storage::exists($resizedManyPhoto->path));
+        $this->assertTrue(Storage::exists($resizedManyPhoto->thumbnail_path));
+        $this->assertTrue(Storage::exists($resizedManyPhoto->original_path));
+        $this->assertTrue($manyPhoto->path !== $resizedManyPhoto->path);
+        $this->assertTrue($manyPhoto->thumbnail_path !== $resizedManyPhoto->thumbnail_path);
 
         /*
          * Rename files
@@ -96,8 +98,8 @@ class FileManagerTest extends BaseTestCase
         $this->assertTrue(Storage::exists($renamedManyPhoto->path));
         $this->assertTrue(Storage::exists($renamedManyPhoto->thumbnail_path));
         $this->assertTrue(Storage::exists($renamedManyPhoto->original_path));
-        $this->assertTrue($manyPhoto->path !== $renamedManyPhoto->path);
-        $this->assertTrue($manyPhoto->thumbnail_path !== $renamedManyPhoto->thumbnail_path);
+        $this->assertTrue($resizedManyPhoto->path !== $renamedManyPhoto->path);
+        $this->assertTrue($resizedManyPhoto->thumbnail_path !== $renamedManyPhoto->thumbnail_path);
 
         /*
          * Rotate image
@@ -119,8 +121,8 @@ class FileManagerTest extends BaseTestCase
         $this->assertTrue(Storage::exists($rotatedManyPhoto->path));
         $this->assertTrue(Storage::exists($rotatedManyPhoto->thumbnail_path));
         $this->assertTrue(Storage::exists($rotatedManyPhoto->original_path));
-        $this->assertTrue($rotatedManyPhoto->path !== $manyPhoto->path);
-        $this->assertTrue($rotatedManyPhoto->thumbnail_path !== $manyPhoto->thumbnail_path);
+        $this->assertTrue($rotatedManyPhoto->path !== $renamedManyPhoto->path);
+        $this->assertTrue($rotatedManyPhoto->thumbnail_path !== $renamedManyPhoto->thumbnail_path);
 
         /*
          * Update image

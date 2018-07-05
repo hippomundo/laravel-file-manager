@@ -47,7 +47,7 @@ class TestModel extends Model
                         'image_size' => ['width' => 1000, 'height' => 500],
                         'thumbnail'  => ['width' => 100, 'height' => 100],
                         'directory'  => 'photos',
-                        "update_file_names_on_change" => false
+                        "update_names_on_change" => false
                     ]
             ],
             'video',
@@ -95,7 +95,7 @@ class TestModel extends Model
      */
     public function photos()
     {
-        return $this->belongsToMany(Media::class, 'test_model_photos', 'photo_id', 'test_model_id');
+        return $this->belongsToMany(Media::class, 'test_model_photos', 'test_model_id', 'photo_id');
     }
 
     /**
@@ -103,7 +103,7 @@ class TestModel extends Model
      */
     public function videos()
     {
-        return $this->belongsToMany(Video::class, 'test_model_videos', 'video_id', 'test_model_id');
+        return $this->belongsToMany(Video::class, 'test_model_videos', 'test_model_id', 'video_id');
     }
 
     /**
@@ -111,6 +111,6 @@ class TestModel extends Model
      */
     public function files()
     {
-        return $this->belongsToMany(File::class, 'test_model_files', 'file_id', 'test_model_id');
+        return $this->belongsToMany(File::class, 'test_model_files', 'test_model_id', 'file_id');
     }
 }

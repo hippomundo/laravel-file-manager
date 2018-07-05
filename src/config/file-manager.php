@@ -41,10 +41,10 @@ return [
     'media' => [
 
         'default' => [
-            "directory"                   => "media",
-            "image_size"                  => 500,
-            "thumbnail"                   => ["width" => 250, "height" => 250],
-            "update_file_names_on_change" => true
+            "directory"              => "media",
+            "image_size"             => 500,
+            "thumbnail"              => ["width" => 250, "height" => 250],
+            "update_names_on_change" => true
         ]
 
     ],

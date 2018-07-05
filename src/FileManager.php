@@ -31,6 +31,7 @@ class FileManager extends BaseManager
     /**
      * @param UploadedFile $file
      * @return array
+     * @throws \ReflectionException
      */
     protected function saveFile(UploadedFile $file)
     {
@@ -58,6 +59,7 @@ class FileManager extends BaseManager
     /**
      * @param UploadedFile $file
      * @return string
+     * @throws \ReflectionException
      */
     protected function moveFile(UploadedFile $file)
     {

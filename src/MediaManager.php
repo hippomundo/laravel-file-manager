@@ -36,6 +36,7 @@ class MediaManager extends BaseManager
      * @param UploadedFile $file
      * @return array
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \ReflectionException
      */
     protected function saveFile(UploadedFile $file)
     {
@@ -68,9 +69,9 @@ class MediaManager extends BaseManager
      * @param Mediable|Media $model
      * @param array $sizes
      * @return \Illuminate\Database\Eloquent\Model|Mediable
-     * @throws Exceptions\FileManagerException
      * @throws FileManagerException
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \ReflectionException
      */
     public function resize(Mediable $model, $sizes)
     {
@@ -105,11 +106,7 @@ class MediaManager extends BaseManager
     {
         $value = Arr::get($this->config, 'update_names_on_change');
 
-        if (is_null($value)) {
-            return false;
-        }
-
-        return Arr::get($this->config, 'update_names_on_change');
+        return is_null($value) ? true : $value;
     }
 
     /**
@@ -228,6 +225,7 @@ class MediaManager extends BaseManager
      * @param $file
      * @return string
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \ReflectionException
      */
     protected function saveImage($file)
     {
@@ -240,6 +238,7 @@ class MediaManager extends BaseManager
      * @param $file
      * @return string
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \ReflectionException
      */
     protected function saveThumbnail($file)
     {
@@ -253,6 +252,7 @@ class MediaManager extends BaseManager
      * @param $sizes
      * @return string
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \ReflectionException
      */
     protected function resizeAndSave($file, $sizes)
     {
