@@ -226,7 +226,7 @@ trait FileManager
      */
     protected function resolveRelation(array $args)
     {
-        $id   = is_numeric($args['relation']) ? $args['relation'] : $args['id'];
+        $id   = (is_numeric($args['relation']) || is_array($args['relation'])) ? $args['relation'] : $args['id'];
         $name = is_string($args['relation']) ? $args['relation'] : '';
 
         $method   = $this->getFileRelationMethod($name);
