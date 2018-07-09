@@ -196,6 +196,10 @@ class MediaManager extends BaseManager
      */
     public function rotatePath($path, $value)
     {
+        if (! $this->canBeTransformed()) {
+            return $path;
+        }
+
         if (StorageManager::exists($path)) {
 
             StorageManager::tmpScope($path, function ($tmp) use ($value, $path) {
@@ -309,6 +313,10 @@ class MediaManager extends BaseManager
      */
     protected function resizeFile($file, $sizes = null)
     {
+        if (! $this->canBeTransformed()) {
+            return File::get($file);
+        }
+
         if (is_array($sizes)) {
             $width  = Arr::get($sizes, 'width', null);
             $height = Arr::get($sizes, 'height', null);
