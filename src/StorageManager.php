@@ -6,7 +6,6 @@ use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
@@ -458,5 +457,19 @@ class StorageManager
         static::deleteTmpFile($tmp);
 
         return $result;
+    }
+
+    /**
+     * @return bool
+     */
+    public static function deleteTMPDirectory()
+    {
+        $disk = static::getTmpDisk();
+
+        if ($disk->exists(static::TMP_DIR)) {
+            return $disk->deleteDirectory(static::TMP_DIR);
+        }
+
+        return true;
     }
 }
