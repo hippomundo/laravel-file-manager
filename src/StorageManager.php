@@ -339,9 +339,10 @@ class StorageManager
     /**
      * @param $path
      * @param null $dir
+     * @param FilesystemAdapter|null $disk
      * @return string
      */
-    public static function generateUniquePath($path, $dir = null)
+    public static function generateUniquePath($path, $dir = null, FilesystemAdapter $disk = null)
     {
         $dirName = $dir ?: static::dirName($path);
 
@@ -351,11 +352,9 @@ class StorageManager
 
         $uniquePath = FileManagerHelpers::glueParts($dirName, $name);
 
-        if (static::exists($uniquePath)) {
-            return static::generateUniquePath($uniquePath);
-        }
+        $exists = ($disk) ? $disk->exists($uniquePath) : static::exists($uniquePath);
 
-        return $uniquePath;
+        return $exists ? static::generateUniquePath($uniquePath, $dir, $disk) : $uniquePath;
     }
 
     /*
