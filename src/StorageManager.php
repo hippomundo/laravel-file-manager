@@ -356,6 +356,50 @@ class StorageManager
         return $exists ? static::generateUniquePath($uniquePath, $dir, $disk) : $uniquePath;
     }
 
+    /**
+     * @param FilesystemAdapter $diskFrom
+     * @param FilesystemAdapter $diskTo
+     * @throws FileNotFoundException
+     */
+    public static function syncDisks(FilesystemAdapter $diskFrom, FilesystemAdapter $diskTo)
+    {
+        $files = $diskFrom->allFiles();
+
+        foreach ($files as $path) {
+            if (! $diskTo->exists($path)) {
+                $diskTo->put($path, $diskFrom->get($path));
+            }
+        }
+    }
+
+    /**
+     * @throws FileNotFoundException
+     */
+    public static function syncMainDiskIntoBackUp()
+    {
+        if (static::hasBackUpDisk()) {
+
+            $mainDisk   = static::getDisk(static::MAIN_DISK);
+            $backUpDisk = static::getDisk(static::BACKUP_DISK);
+
+            static::syncDisks($mainDisk, $backUpDisk);
+        }
+    }
+
+    /**
+     * @throws FileNotFoundException
+     */
+    public static function syncBackUpDiskIntoMainDisk()
+    {
+        if (static::hasBackUpDisk()) {
+
+            $mainDisk   = static::getDisk(static::MAIN_DISK);
+            $backUpDisk = static::getDisk(static::BACKUP_DISK);
+
+            static::syncDisks($backUpDisk, $mainDisk);
+        }
+    }
+
     /*
     |--------------------------------------------------------------------------
     | TMP files
@@ -462,7 +506,7 @@ class StorageManager
     /**
      * @return bool
      */
-    public static function deleteTMPDirectory()
+    public static function deleteTmpDirectory()
     {
         $disk = static::getTmpDisk();
 

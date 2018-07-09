@@ -5,6 +5,7 @@ namespace RGilyov\CsvImporter\Test;
 use RGilyov\FileManager\StorageManager as Storage;
 use RGilyov\FileManager\Models\File;
 use RGilyov\FileManager\Models\Video;
+use RGilyov\FileManager\StorageManager;
 use RGilyov\FileManager\Test\BaseTestCase;
 use RGilyov\FileManager\Models\Media;
 use RGilyov\FileManager\Test\Models\TestModel;
@@ -446,5 +447,35 @@ class FileManagerTest extends BaseTestCase
         $files = $testModel->files()->get();
 
         $this->assertTrue($files->count() === 0);
+    }
+
+    /** @test */
+    public function it_can_sync_disks()
+    {
+        $mainDisk = StorageManager::getDisk();
+
+        $backUpDisk = StorageManager::getDisk(StorageManager::BACKUP_DISK);
+
+        $test = 'test/test.txt';
+        $innerTest = 'test/test/test.txt';
+        $supperInnerTest = 'test/test/test/test.txt';
+
+        $backUpDisk->put($test, $test);
+        $backUpDisk->put($innerTest, $innerTest);
+        $backUpDisk->put($supperInnerTest, $supperInnerTest);
+
+        $mainDisk->put($innerTest, $innerTest);
+
+        StorageManager::syncDisks($backUpDisk, $mainDisk);
+
+        $this->assertTrue($backUpDisk->exists($test));
+        $this->assertTrue($backUpDisk->exists($innerTest));
+        $this->assertTrue($backUpDisk->exists($supperInnerTest));
+
+        $this->assertTrue($mainDisk->exists($test));
+        $this->assertTrue($mainDisk->exists($innerTest));
+        $this->assertTrue($mainDisk->exists($supperInnerTest));
+
+        StorageManager::deleteDirectory('test');
     }
 }

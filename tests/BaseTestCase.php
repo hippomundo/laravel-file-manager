@@ -141,6 +141,7 @@ abstract class BaseTestCase extends TestCase
         });
 
         @StorageManager::deleteDirectory('files');
+        @StorageManager::deleteTmpDirectory();
 
         parent::tearDown();
     }
