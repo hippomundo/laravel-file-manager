@@ -3,7 +3,6 @@
 namespace RGilyov\FileManager\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use RGilyov\FileManager\FileManagerHelpers;
 use RGilyov\FileManager\Interfaces\Mediable;
 use RGilyov\FileManager\StorageManager;
 
@@ -38,7 +37,7 @@ class Video extends Model implements Mediable
      */
     public function getUrlAttribute()
     {
-        return FileManagerHelpers::fileUrl($this->path);
+        return StorageManager::url($this->path);
     }
 
     /**
@@ -46,7 +45,7 @@ class Video extends Model implements Mediable
      */
     public function getThumbnailUrlAttribute()
     {
-        return FileManagerHelpers::fileUrl($this->thumbnail_path);
+        return StorageManager::url($this->thumbnail_path);
     }
 
     /**

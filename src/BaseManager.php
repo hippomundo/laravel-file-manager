@@ -142,7 +142,7 @@ abstract class BaseManager implements ManagerContract
 
         $name = StorageManager::originalName($file);
 
-        $path = FileManagerHelpers::glueParts($path, $name);
+        $path = StorageManager::glueParts($path, $name);
 
         $this->putFileToPath($path, $file);
 

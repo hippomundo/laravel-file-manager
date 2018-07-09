@@ -2,8 +2,11 @@
 
 namespace RGilyov\FileManager;
 
-use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Arr;
+use RGilyov\FileManager\Models\File;
+use RGilyov\FileManager\Models\Media;
+use RGilyov\FileManager\Models\Video;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class FileManagerHelpers
@@ -74,66 +77,19 @@ class FileManagerHelpers
     }
 
     /**
-     * @param $path
-     * @return string
+     * @return bool
      */
-    public static function fileUrl($path)
+    public static function serveFilesFromBackUp()
     {
-        $mainDisk = StorageManager::getDisk(StorageManager::MAIN_DISK);
-
-        if (StorageManager::hasBackUpDisk() && ! $mainDisk->exists($path)) {
-            $config = static::backUpDiskConfigurations();
-
-            $backupDisk = StorageManager::getDisk(StorageManager::BACKUP_DISK);
-
-            return static::returnFileUrl($backupDisk, $path, $config);
-        }
-
-        $config = static::diskConfigurations();
-
-        return static::returnFileUrl($mainDisk, $path, $config);
+        return ( bool )config('file-manager.serve_files_from_backup_disk');
     }
 
     /**
-     * @param FilesystemAdapter $disk
-     * @param $config
-     * @param $path
-     * @return string
+     * @param Model $model
+     * @return bool
      */
-    protected static function returnFileUrl($disk, $path, $config)
+    public static function isMedia(Model $model)
     {
-        $fileUrl = static::pathToUrl($path);
-
-        $url = Arr::get($config, 'url');
-
-        if ($url) {
-            return static::glueParts($url, $fileUrl, true);
-        } elseif(method_exists($disk, 'url')) {
-            return $disk->url($fileUrl);
-        }
-
-        return asset($fileUrl);
-    }
-
-    /**
-     * @param $part1
-     * @param $part2
-     * @param bool $url
-     * @return string
-     */
-    public static function glueParts($part1, $part2, $url = false)
-    {
-        $sep = $url ? '/' : DIRECTORY_SEPARATOR;
-
-        return rtrim($part1, $sep) . $sep . ltrim($part2, $sep);
-    }
-
-    /**
-     * @param $path
-     * @return mixed
-     */
-    public static function pathToUrl($path)
-    {
-        return str_replace(DIRECTORY_SEPARATOR, '/', $path);
+        return ($model instanceof Media || $model instanceof Video || $model instanceof File);
     }
 }

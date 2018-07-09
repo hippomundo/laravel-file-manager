@@ -6,13 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use RGilyov\FileManager\Exceptions\FileManagerException;
 use RGilyov\FileManager\Interfaces\Mediable;
-use RGilyov\FileManager\Models\File;
-use RGilyov\FileManager\Models\Media;
-use RGilyov\FileManager\Models\Video;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
@@ -196,7 +192,7 @@ class ResolvedRelation
      */
     public function associate(Mediable $model)
     {
-        if ($this->isMedia($model)) {
+        if (FileManagerHelpers::isMedia($model)) {
             if ($this->relation instanceof BelongsToMany) {
                 $this->relation->attach($model->id);
             } elseif($this->relation instanceof BelongsTo) {
@@ -207,14 +203,5 @@ class ResolvedRelation
         }
 
         return false;
-    }
-
-    /**
-     * @param Model $model
-     * @return bool
-     */
-    public static function isMedia(Model $model)
-    {
-        return ($model instanceof Media || $model instanceof Video || $model instanceof File);
     }
 }

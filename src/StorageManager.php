@@ -4,6 +4,7 @@ namespace RGilyov\FileManager;
 
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -268,6 +269,72 @@ class StorageManager
 
     /*
     |--------------------------------------------------------------------------
+    | URL building
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @param $path
+     * @return string
+     */
+    public static function url($path)
+    {
+        $backUp = FileManagerHelpers::serveFilesFromBackUp();
+
+        $diskName = $backUp ? StorageManager::BACKUP_DISK : StorageManager::MAIN_DISK;
+
+        $disk = StorageManager::getDisk($diskName);
+
+        $config = $backUp ? FileManagerHelpers::backUpDiskConfigurations() : FileManagerHelpers::diskConfigurations();
+
+        return static::returnFileUrl($disk, $path, $config);
+    }
+
+    /**
+     * @param FilesystemAdapter $disk
+     * @param $config
+     * @param $path
+     * @return string
+     */
+    protected static function returnFileUrl($disk, $path, $config)
+    {
+        $fileUrl = static::pathToUrl($path);
+
+        $url = Arr::get($config, 'url');
+
+        if ($url) {
+            return static::glueParts($url, $fileUrl, true);
+        } elseif(method_exists($disk, 'url')) {
+            return $disk->url($fileUrl);
+        }
+
+        return asset($fileUrl);
+    }
+
+    /**
+     * @param $part1
+     * @param $part2
+     * @param bool $url
+     * @return string
+     */
+    public static function glueParts($part1, $part2, $url = false)
+    {
+        $sep = $url ? '/' : DIRECTORY_SEPARATOR;
+
+        return rtrim($part1, $sep) . $sep . ltrim($part2, $sep);
+    }
+
+    /**
+     * @param $path
+     * @return mixed
+     */
+    public static function pathToUrl($path)
+    {
+        return str_replace(DIRECTORY_SEPARATOR, '/', $path);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Path building
     |--------------------------------------------------------------------------
     */
@@ -349,12 +416,18 @@ class StorageManager
 
         $name = Str::slug(Str::random(), '_') . "." . $extension;
 
-        $uniquePath = FileManagerHelpers::glueParts($dirName, $name);
+        $uniquePath = static::glueParts($dirName, $name);
 
         $exists = ($disk) ? $disk->exists($uniquePath) : static::exists($uniquePath);
 
         return $exists ? static::generateUniquePath($uniquePath, $dir, $disk) : $uniquePath;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sync disks
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * @param FilesystemAdapter $diskFrom
@@ -412,7 +485,7 @@ class StorageManager
      */
     public static function generateTmpPath($path)
     {
-        $path = FileManagerHelpers::glueParts(static::TMP_DIR, static::baseName($path));
+        $path = static::glueParts(static::TMP_DIR, static::baseName($path));
 
         return static::generateUniquePath($path, null, static::getTmpDisk());
     }
@@ -423,7 +496,7 @@ class StorageManager
      */
     public static function tmpFullPath($path)
     {
-        return FileManagerHelpers::glueParts(static::tmpFullPathPrefix(), $path);
+        return static::glueParts(static::tmpFullPathPrefix(), $path);
     }
 
     /**
