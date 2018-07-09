@@ -369,9 +369,9 @@ class StorageManager
      */
     public static function generateTmpPath($path)
     {
-        return static::generateUniquePath(
-            FileManagerHelpers::glueParts(static::TMP_DIR, static::baseName($path))
-        );
+        $path = FileManagerHelpers::glueParts(static::TMP_DIR, static::baseName($path));
+
+        return static::generateUniquePath($path, null, static::getTmpDisk());
     }
 
     /**
