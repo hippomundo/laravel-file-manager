@@ -17,6 +17,11 @@ use RGilyov\FileManager\Models\Media;
 class MediaManager extends BaseManager
 {
     /**
+     * @var string
+     */
+    protected $mimeType;
+
+    /**
      * @return mixed
      */
     public function defaultConfig()
@@ -33,6 +38,15 @@ class MediaManager extends BaseManager
     }
 
     /**
+     * @param $mimeType
+     * @return void
+     */
+    public function initMimeType($mimeType)
+    {
+        $this->mimeType = $mimeType;
+    }
+
+    /**
      * @param UploadedFile $file
      * @return array
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
@@ -40,7 +54,9 @@ class MediaManager extends BaseManager
      */
     protected function saveFile(UploadedFile $file)
     {
-        $type           = $file->getMimeType();
+        $this->initMimeType($file->getMimeType());
+
+        $type           = $this->mimeType;
         $file_size      = $file->getClientSize();
         $path           = $this->saveImage($file);
         $thumbnail_path = $this->saveThumbnail($file);
@@ -75,6 +91,12 @@ class MediaManager extends BaseManager
      */
     public function resize(Mediable $model, $sizes)
     {
+        $this->initMimeType($model->type);
+
+        if (! $this->canBeTransformed()) {
+            return $model;
+        }
+
         $this->checkOriginal($model->original_path);
 
         $imageSizes     = Arr::get($sizes, 'image_size', $this->getImageSizes());
@@ -150,7 +172,9 @@ class MediaManager extends BaseManager
      */
     public function rotate(Mediable $model, $value)
     {
-        if ($this->isSvg($model->original_path)) {
+        $this->initMimeType($model->type);
+
+        if (! $this->canBeTransformed()) {
             return $model;
         }
 
@@ -213,12 +237,24 @@ class MediaManager extends BaseManager
     }
 
     /**
-     * @param $file
      * @return bool
      */
-    public function isSvg($file)
+    public function canBeTransformed()
     {
-        return strcasecmp(StorageManager::extension($file), 'svg') === 0;
+        switch (strtolower($this->mimeType)) {
+            case 'image/png':
+            case 'image/x-png':
+            case 'image/jpg':
+            case 'image/jpeg':
+            case 'image/pjpeg':
+            case 'image/gif':
+                return true;
+            case 'image/webp':
+            case 'image/x-webp':
+                return function_exists('imagecreatefromwebp');
+            default:
+                return false;
+        }
     }
 
     /**
@@ -281,18 +317,14 @@ class MediaManager extends BaseManager
             $height = null;
         }
 
-        if ($this->isSvg($file)) {
-            return File::get($file);
-        } else {
-            return StorageManager::tmpScope($file, function ($tmp) use ($width, $height) {
-                $image = new ImageManager();
+        return StorageManager::tmpScope($file, function ($tmp) use ($width, $height) {
+            $image = new ImageManager();
 
-                return (string) $image->make($tmp)
-                    ->resize($width, $height, function ($constraint) {
-                        $constraint->aspectRatio();
-                    })
-                    ->encode();
-            });
-        }
+            return (string) $image->make($tmp)
+                ->resize($width, $height, function ($constraint) {
+                    $constraint->aspectRatio();
+                })
+                ->encode();
+        });
     }
 }
