@@ -92,26 +92,28 @@ class ResolvedRelation
      */
     public function find()
     {
+        $result = collect([]);
+
         if ($this->relation instanceof BelongsToMany) {
             if (! $this->id || is_array($this->id)) {
 
-                $models = $this->relation->get();
+                $result = $this->relation->get();
 
                 if (is_array($this->id)) {
-                    return $models->filter(function (Model $model) {
+                    $result = $result->filter(function (Model $model) {
                         return in_array($model->id, $this->id);
                     });
                 }
-
-                return $models;
             } elseif($this->id) {
-                return collect([$this->relation->find($this->id)]);
+                $result = collect([$this->relation->find($this->id)]);
             }
         } elseif ($this->relation instanceof BelongsTo) {
-            return collect([$this->relation->first()]);
+            $result = collect([$this->relation->first()]);
         }
 
-        return collect([]);
+        return $result->filter(function ($model) {
+            return $model instanceof Model;
+        });
     }
 
     /**
