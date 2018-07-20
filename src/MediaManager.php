@@ -217,18 +217,32 @@ class MediaManager extends BaseManager
 
         if (StorageManager::exists($path)) {
 
-            StorageManager::tmpScope($path, function ($tmp) use ($value, $path) {
-                $image = new ImageManager();
+            if (StorageManager::isSingleCloudDisk()) {
+                $contents = StorageManager::tmpScope($path, function ($tmp) use ($value) {
+                    return $this->rotateImage($tmp, $value);
+                });
+            } else {
+                $contents = $this->rotateImage(StorageManager::originalFullPath($path), $value);
+            }
 
-                $contents = ( string )$image->make($tmp)->rotate($this->rotationValue($value))->encode();
-
-                $this->putFileToPath($path, $contents);
-            });
+            $this->putFileToPath($path, $contents);
 
             return $path;
         }
 
         return false;
+    }
+
+    /**
+     * @param $path
+     * @param $value
+     * @return string
+     */
+    protected function rotateImage($path, $value)
+    {
+        $image = new ImageManager();
+
+        return ( string )$image->make($path)->rotate($this->rotationValue($value))->encode();
     }
 
     /**
@@ -342,16 +356,32 @@ class MediaManager extends BaseManager
 
         $lgImage = Arr::get($sizes, 'lg_image', false);
 
-        return StorageManager::tmpScope($file, function ($tmp) use ($width, $height, $lgImage) {
-            $image = (new ImageManager())->make($tmp);
+        if (StorageManager::isSingleCloudDisk()) {
+            return StorageManager::tmpScope($file, function ($tmp) use ($width, $height, $lgImage) {
+                return $this->resizeImage($tmp, $width, $height, $lgImage);
+            });
+        }
 
-            if ($lgImage && $image->width() <= $width) {
-                return File::get($tmp);
-            }
+        return $this->resizeImage(StorageManager::originalFullPath($file), $width, $height, $lgImage);
+    }
 
-            return ( string )$image->resize($width, $height, function ($constraint) {
-                    $constraint->aspectRatio();
-                })->encode();
-        });
+    /**
+     * @param $file
+     * @param $width
+     * @param $height
+     * @param $lgImage
+     * @return string
+     */
+    protected function resizeImage($file, $width, $height, $lgImage)
+    {
+        $image = (new ImageManager())->make($file);
+
+        if ($lgImage && $image->width() <= $width) {
+            return File::get($file);
+        }
+
+        return ( string )$image->resize($width, $height, function ($constraint) {
+            $constraint->aspectRatio();
+        })->encode();
     }
 }

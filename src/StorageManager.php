@@ -79,6 +79,14 @@ class StorageManager
     }
 
     /**
+     * @return bool
+     */
+    public static function isSingleCloudDisk()
+    {
+        return FileManagerHelpers::isCloud() && ! static::hasBackUpDisk();
+    }
+
+    /**
      * @return string
      */
     public static function getBackUpDisk()
@@ -346,8 +354,8 @@ class StorageManager
     public static function originalName(UploadedFile $file)
     {
         return Str::slug(
-                pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), '_'
-            ) . "." . static::extension($file);
+            pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), '_'
+        ) . "." . static::extension($file);
     }
 
     /**
@@ -421,6 +429,30 @@ class StorageManager
         $exists = ($disk) ? $disk->exists($uniquePath) : static::exists($uniquePath);
 
         return $exists ? static::generateUniquePath($uniquePath, $dir, $disk) : $uniquePath;
+    }
+
+    /**
+     * @param FilesystemAdapter $disk
+     * @return string
+     */
+    public static function fullPathPrefix(FilesystemAdapter $disk)
+    {
+        return $disk->getDriver()->getAdapter()->getPathPrefix();
+    }
+
+    /**
+     * @param $path
+     * @return string
+     */
+    public static function originalFullPath($path)
+    {
+        if (! is_string($path) || static::isSingleCloudDisk()) {
+            return $path;
+        }
+
+        $disk = static::hasBackUpDisk() ? static::getDisk(static::BACKUP_DISK) : static::getDisk();
+
+        return static::glueParts(static::fullPathPrefix($disk), $path);
     }
 
     /*
@@ -513,7 +545,7 @@ class StorageManager
      */
     public static function tmpFullPathPrefix()
     {
-        return static::getTmpDisk()->getDriver()->getAdapter()->getPathPrefix();
+        return static::fullPathPrefix(static::getTmpDisk());
     }
 
     /**
