@@ -61,7 +61,7 @@ class Video extends Model implements Mediable
      */
     public function deleteOriginal()
     {
-        StorageManager::delete($this->original_path);
+        StorageManager::originalUrl($this->original_path);
     }
 
     /**

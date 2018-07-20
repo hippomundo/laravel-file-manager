@@ -39,7 +39,7 @@ class Media extends Model implements Mediable
      */
     public function getOriginalUrlAttribute()
     {
-        return StorageManager::url($this->original_path);
+        return StorageManager::originalUrl($this->original_path);
     }
 
     /**

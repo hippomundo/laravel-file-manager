@@ -79,6 +79,26 @@ class StorageManager
     }
 
     /**
+     * @param $path
+     * @param $contents
+     * @throws \ReflectionException
+     */
+    public static function storeOriginalFile($path, $contents)
+    {
+        if (static::isSingleCloudDisk()) {
+            static::put($path, $contents);
+        } else {
+            if (static::hasBackUpDisk()) {
+                $disk = static::getDisk(static::BACKUP_DISK);
+            } else {
+                $disk = static::getDisk();
+            }
+
+            $disk->put($path, $contents);
+        }
+    }
+
+    /**
      * @return bool
      */
     public static function isSingleCloudDisk()
@@ -287,15 +307,50 @@ class StorageManager
      */
     public static function url($path)
     {
-        $backUp = FileManagerHelpers::serveFilesFromBackUp();
+        if (FileManagerHelpers::serveFilesFromBackUp()) {
+            return static::backUpUrl($path);
+        }
 
-        $diskName = $backUp ? StorageManager::BACKUP_DISK : StorageManager::MAIN_DISK;
+        return static::mainDiskUrl($path);
+    }
 
-        $disk = StorageManager::getDisk($diskName);
+    /**
+     * @param $path
+     * @return string
+     */
+    public static function mainDiskUrl($path)
+    {
+        $disk = StorageManager::getDisk();
 
-        $config = $backUp ? FileManagerHelpers::backUpDiskConfigurations() : FileManagerHelpers::diskConfigurations();
+        $config = FileManagerHelpers::diskConfigurations();
 
         return static::returnFileUrl($disk, $path, $config);
+    }
+
+    /**
+     * @param $path
+     * @return string
+     */
+    public static function backUpUrl($path)
+    {
+        $disk = StorageManager::getDisk(StorageManager::BACKUP_DISK);
+
+        $config = FileManagerHelpers::backUpDiskConfigurations();
+
+        return static::returnFileUrl($disk, $path, $config);
+    }
+
+    /**
+     * @param $path
+     * @return string
+     */
+    public static function originalUrl($path)
+    {
+        if (static::isSingleCloudDisk()) {
+            return static::url($path);
+        }
+
+        return static::hasBackUpDisk() ? static::backUpUrl($path) : static::mainDiskUrl($path);
     }
 
     /**

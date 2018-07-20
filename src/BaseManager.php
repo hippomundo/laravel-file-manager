@@ -144,7 +144,7 @@ abstract class BaseManager implements ManagerContract
 
         $path = StorageManager::glueParts($path, $name);
 
-        $this->putFileToPath($path, $file);
+        $this->storeOriginalFile($path, $file);
 
         return $path;
     }
@@ -159,6 +159,19 @@ abstract class BaseManager implements ManagerContract
         $contents = $contents instanceof UploadedFile ? File::get($contents) : $contents;
 
         StorageManager::put($path, $contents);
+    }
+
+    /**
+     * @param $path
+     * @param $contents
+     * @return bool|void
+     * @throws \ReflectionException
+     */
+    public function storeOriginalFile($path, $contents)
+    {
+        $contents = $contents instanceof UploadedFile ? File::get($contents) : $contents;
+
+        StorageManager::storeOriginalFile($path, $contents);
     }
 
     /**
