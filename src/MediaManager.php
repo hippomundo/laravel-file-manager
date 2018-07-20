@@ -99,7 +99,7 @@ class MediaManager extends BaseManager
 
         $this->checkOriginal($model->original_path);
 
-        $imageSizes     = Arr::get($sizes, 'image_size', $this->getImageSizes());
+        $imageSizes     = $this->getImageSizes($sizes);
         $thumbnailSizes = Arr::get($sizes, 'thumbnail', $this->getThumbnailSizes());
 
         $resized = $this->resizeFile($model->original_path, $imageSizes);
@@ -140,11 +140,26 @@ class MediaManager extends BaseManager
     }
 
     /**
-     * @return mixed
+     * @param $sizes
+     * @return array|mixed
      */
-    public function getImageSizes()
+    public function getImageSizes($sizes = null)
     {
-        return Arr::get($this->config, 'image_size', 500);
+        $default = Arr::get($this->config, 'image_size', 500);
+
+        if (! $sizes) {
+            return $default;
+        }
+
+        $sizes = Arr::get($sizes, 'image_size', $default);
+
+        if (! is_array($sizes)) {
+            return ['width' => $sizes, 'height' => null, 'lg_image' => true];
+        }
+
+        $sizes['lg_image'] = true;
+
+        return $sizes;
     }
 
     /**
@@ -325,14 +340,18 @@ class MediaManager extends BaseManager
             $height = null;
         }
 
-        return StorageManager::tmpScope($file, function ($tmp) use ($width, $height) {
-            $image = new ImageManager();
+        $lgImage = Arr::get($sizes, 'lg_image', false);
 
-            return (string) $image->make($tmp)
-                ->resize($width, $height, function ($constraint) {
+        return StorageManager::tmpScope($file, function ($tmp) use ($width, $height, $lgImage) {
+            $image = (new ImageManager())->make($tmp);
+
+            if ($lgImage && $image->width() <= $width) {
+                return File::get($tmp);
+            }
+
+            return ( string )$image->resize($width, $height, function ($constraint) {
                     $constraint->aspectRatio();
-                })
-                ->encode();
+                })->encode();
         });
     }
 }
