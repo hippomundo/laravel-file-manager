@@ -83,17 +83,37 @@ class VideoManager extends BaseManager
      */
     protected function resizeAndSaveVideo($fromPath, $toPath, $size)
     {
+        if (StorageManager::isSingleCloudDisk()) {
+            return $this->resizeOnlyCloud($fromPath, $toPath, $size);
+        }
+
+        $execFromPath = StorageManager::originalFullPath($fromPath);
+
+        $execToPath = StorageManager::originalFullPath($toPath);
+
+        $this->resizeVideo($execFromPath, $execToPath, $size);
+
+        return $toPath;
+    }
+
+    /**
+     * @param $fromPath
+     * @param $toPath
+     * @param $size
+     * @return mixed
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    protected function resizeOnlyCloud($fromPath, $toPath, $size)
+    {
         return StorageManager::tmpScope($fromPath, function ($tmp) use ($fromPath, $toPath, $size) {
 
             $tmpToPath = StorageManager::generateTmpPath($toPath);
 
             $execToPath = StorageManager::tmpFullPath($tmpToPath);
 
-            $exec = "/usr/bin/HandBrakeCLI -O -Z \"Fast {$size}\" -i {$tmp} -o {$execToPath}";
+            $result = $this->resizeVideo($tmp, $execToPath, $size);
 
-            exec($exec, $output, $return_var);
-
-            if ($return_var !== 0) {
+            if ($result !== 0) {
                 $this->putFileToPath($toPath, StorageManager::get($fromPath));
             } else {
                 $this->putFileToPath($toPath, StorageManager::getTmpDisk()->get($tmpToPath));
@@ -103,6 +123,21 @@ class VideoManager extends BaseManager
 
             return $toPath;
         });
+    }
+
+    /**
+     * @param $fromPath
+     * @param $toPath
+     * @param $size
+     * @return mixed
+     */
+    protected function resizeVideo($fromPath, $toPath, $size)
+    {
+        $exec = "/usr/bin/HandBrakeCLI -O -Z \"Fast {$size}\" -i {$fromPath} -o {$toPath}";
+
+        exec($exec, $output, $return_var);
+
+        return $return_var;
     }
 
     /**

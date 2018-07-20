@@ -216,7 +216,6 @@ class MediaManager extends BaseManager
         }
 
         if (StorageManager::exists($path)) {
-
             if (StorageManager::isSingleCloudDisk()) {
                 $contents = StorageManager::tmpScope($path, function ($tmp) use ($value) {
                     return $this->rotateImage($tmp, $value);
