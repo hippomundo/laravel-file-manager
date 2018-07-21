@@ -243,13 +243,24 @@ trait FileManager
      */
     public function getRelationFromMethod($method)
     {
-        foreach ([$method, Str::snake($method), Str::camel($method), Str::studly($method)] as $relation) {
+        $possibleNames = $this->getArrayOfPossibleNames($method);
+
+        foreach ($possibleNames as $relation) {
             if (method_exists($this, $relation)) {
                 return $this->{$relation}();
             }
         }
 
         throw new FileManagerException("The '{$method}' relation does not exists in the model.");
+    }
+
+    /**
+     * @param $name
+     * @return array
+     */
+    protected function getArrayOfPossibleNames($name)
+    {
+        return [$name, Str::snake($name), Str::camel($name), Str::studly($name)];
     }
 
     /**
@@ -266,7 +277,7 @@ trait FileManager
             }
 
             foreach ($options as $method => $values) {
-                if ($relation == $values['request_binding']) {
+                if ($relation === $values['request_binding']) {
                     return $method;
                 }
             }
@@ -284,14 +295,15 @@ trait FileManager
     protected function checkRequestFieldsAndCreateOrUpdateFile(array $attributes)
     {
         $created = collect([]);
+
         foreach ($this->getFileManagerOptions() as $method => &$options) {
-            if (isset($attributes[$options['request_binding']])) {
+
+            $file = isset($attributes[$options['request_binding']]) ? $attributes[$options['request_binding']] : null;
+
+            if ($file instanceof UploadedFile || is_array($file)) {
                 $this->deleteOldFileIfExists($method);
 
-                $created->offsetSet(
-                    $options['request_binding'],
-                    $this->createFileAction($attributes[$options['request_binding']], $method)
-                );
+                $created->offsetSet($options['request_binding'], $this->createFileAction($file, $method));
             }
         }
 

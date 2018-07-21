@@ -151,15 +151,7 @@ class MediaManager extends BaseManager
             return $default;
         }
 
-        $sizes = Arr::get($sizes, 'image_size', $default);
-
-        if (! is_array($sizes)) {
-            return ['width' => $sizes, 'height' => null, 'lg_image' => true];
-        }
-
-        $sizes['lg_image'] = true;
-
-        return $sizes;
+        return Arr::get($sizes, 'image_size', $default);
     }
 
     /**
@@ -353,31 +345,24 @@ class MediaManager extends BaseManager
             $height = null;
         }
 
-        $lgImage = Arr::get($sizes, 'lg_image', false);
-
         if (StorageManager::isSingleCloudDisk()) {
-            return StorageManager::tmpScope($file, function ($tmp) use ($width, $height, $lgImage) {
-                return $this->resizeImage($tmp, $width, $height, $lgImage);
+            return StorageManager::tmpScope($file, function ($tmp) use ($width, $height) {
+                return $this->resizeImage($tmp, $width, $height);
             });
         }
 
-        return $this->resizeImage(StorageManager::originalFullPath($file), $width, $height, $lgImage);
+        return $this->resizeImage(StorageManager::originalFullPath($file), $width, $height);
     }
 
     /**
      * @param $file
      * @param $width
      * @param $height
-     * @param $lgImage
      * @return string
      */
-    protected function resizeImage($file, $width, $height, $lgImage)
+    protected function resizeImage($file, $width, $height)
     {
         $image = (new ImageManager())->make($file);
-
-        if ($lgImage && $image->width() <= $width) {
-            return File::get($file);
-        }
 
         return ( string )$image->resize($width, $height, function ($constraint) {
             $constraint->aspectRatio();
