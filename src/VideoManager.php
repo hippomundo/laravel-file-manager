@@ -80,6 +80,7 @@ class VideoManager extends BaseManager
      * @param $size
      * @return mixed
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \ReflectionException
      */
     protected function resizeAndSaveVideo($fromPath, $toPath, $size)
     {
@@ -91,7 +92,13 @@ class VideoManager extends BaseManager
 
         $execToPath = StorageManager::originalFullPath($toPath);
 
-        $this->resizeVideo($execFromPath, $execToPath, $size);
+        $result = $this->resizeVideo($execFromPath, $execToPath, $size);
+
+        if ($result !== 0) {
+            $this->putFileToPath($toPath, StorageManager::get($fromPath));
+        } elseif(StorageManager::hasBackUpDisk()) {
+            StorageManager::getDisk(StorageManager::MAIN_DISK)->put($toPath, StorageManager::get($toPath));
+        }
 
         return $toPath;
     }
