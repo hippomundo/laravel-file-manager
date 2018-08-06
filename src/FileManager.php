@@ -1,14 +1,14 @@
 <?php
 
-namespace RGilyov\FileManager;
+namespace Hippomundo\FileManager;
 
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use RGilyov\FileManager\Interfaces\Mediable;
-use RGilyov\FileManager\Models\File;
+use Hippomundo\FileManager\Interfaces\Mediable;
+use Hippomundo\FileManager\Models\File;
 
 /**
  * Class FileManager
- * @package RGilyov\FileManager
+ * @package Hippomundo\FileManager
  */
 class FileManager extends BaseManager
 {

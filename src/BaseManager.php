@@ -1,19 +1,19 @@
 <?php
 
-namespace RGilyov\FileManager;
+namespace Hippomundo\FileManager;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\File;
-use RGilyov\FileManager\Exceptions\FileManagerException;
+use Hippomundo\FileManager\Exceptions\FileManagerException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Database\Eloquent\Model;
-use RGilyov\FileManager\Interfaces\Mediable;
-use \RGilyov\FileManager\Interfaces\Manager as ManagerContract;
+use Hippomundo\FileManager\Interfaces\Mediable;
+use \Hippomundo\FileManager\Interfaces\Manager as ManagerContract;
 
 /**
  * Class BaseManager
- * @package RGilyov\FileManager
+ * @package Hippomundo\FileManager
  */
 abstract class BaseManager implements ManagerContract
 {

@@ -1,19 +1,19 @@
 <?php
 
-namespace RGilyov\FileManager;
+namespace Hippomundo\FileManager;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
-use RGilyov\FileManager\Exceptions\FileManagerException;
-use RGilyov\FileManager\Interfaces\Mediable;
+use Hippomundo\FileManager\Exceptions\FileManagerException;
+use Hippomundo\FileManager\Interfaces\Mediable;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Class ResolvedRelation
- * @package RGilyov\FileManager
+ * @package Hippomundo\FileManager
  */
 class ResolvedRelation
 {

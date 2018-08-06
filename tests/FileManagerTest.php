@@ -1,18 +1,18 @@
 <?php
 
-namespace RGilyov\CsvImporter\Test;
+namespace Hippomundo\CsvImporter\Test;
 
-use RGilyov\FileManager\StorageManager as Storage;
-use RGilyov\FileManager\Models\File;
-use RGilyov\FileManager\Models\Video;
-use RGilyov\FileManager\StorageManager;
-use RGilyov\FileManager\Test\BaseTestCase;
-use RGilyov\FileManager\Models\Media;
-use RGilyov\FileManager\Test\Models\TestModel;
+use Hippomundo\FileManager\StorageManager as Storage;
+use Hippomundo\FileManager\Models\File;
+use Hippomundo\FileManager\Models\Video;
+use Hippomundo\FileManager\StorageManager;
+use Hippomundo\FileManager\Test\BaseTestCase;
+use Hippomundo\FileManager\Models\Media;
+use Hippomundo\FileManager\Test\Models\TestModel;
 
 /**
  * Class FileManagerTest
- * @package RGilyov\CsvImporter\Test
+ * @package Hippomundo\CsvImporter\Test
  */
 class FileManagerTest extends BaseTestCase
 {

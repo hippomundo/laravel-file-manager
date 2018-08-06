@@ -1,19 +1,19 @@
 <?php
 
-namespace RGilyov\FileManager\Test;
+namespace Hippomundo\FileManager\Test;
 
-use RGilyov\FileManager\StorageManager;
-use RGilyov\FileManager\Test\File\UploadedFile;
+use Hippomundo\FileManager\StorageManager;
+use Hippomundo\FileManager\Test\File\UploadedFile;
 use Orchestra\Testbench\TestCase;
-use RGilyov\FileManager\Models\File;
-use RGilyov\FileManager\Models\Media;
-use RGilyov\FileManager\Models\Video;
-use RGilyov\FileManager\Providers\FileManagerServiceProvider;
+use Hippomundo\FileManager\Models\File;
+use Hippomundo\FileManager\Models\Media;
+use Hippomundo\FileManager\Models\Video;
+use Hippomundo\FileManager\Providers\FileManagerServiceProvider;
 use finfo;
 
 /**
  * Class BaseTestCase
- * @package RGilyov\FileManage\Test
+ * @package Hippomundo\FileManage\Test
  */
 abstract class BaseTestCase extends TestCase
 {

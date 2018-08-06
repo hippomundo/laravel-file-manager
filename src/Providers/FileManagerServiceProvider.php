@@ -1,9 +1,13 @@
 <?php
 
-namespace RGilyov\FileManager\Providers;
+namespace Hippomundo\FileManager\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Class FileManagerServiceProvider
+ * @package Hippomundo\FileManager\Providers
+ */
 class FileManagerServiceProvider extends ServiceProvider
 {
     /**

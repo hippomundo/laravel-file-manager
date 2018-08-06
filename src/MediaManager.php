@@ -1,18 +1,18 @@
 <?php
 
-namespace RGilyov\FileManager;
+namespace Hippomundo\FileManager;
 
 use Illuminate\Support\Facades\File;
-use RGilyov\FileManager\Exceptions\FileManagerException;
+use Hippomundo\FileManager\Exceptions\FileManagerException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
 use Intervention\Image\ImageManager;
-use RGilyov\FileManager\Interfaces\Mediable;
-use RGilyov\FileManager\Models\Media;
+use Hippomundo\FileManager\Interfaces\Mediable;
+use Hippomundo\FileManager\Models\Media;
 
 /**
  * Class MediaManager
- * @package RGilyov\FileManager
+ * @package Hippomundo\FileManager
  */
 class MediaManager extends BaseManager
 {

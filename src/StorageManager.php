@@ -1,6 +1,6 @@
 <?php
 
-namespace RGilyov\FileManager;
+namespace Hippomundo\FileManager;
 
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Filesystem\FilesystemAdapter;
@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Class StorageManager
- * @package RGilyov\FileManager
+ * @package Hippomundo\FileManager
  */
 class StorageManager
 {

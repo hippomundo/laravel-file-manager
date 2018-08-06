@@ -1,16 +1,16 @@
 <?php
 
-namespace RGilyov\FileManager;
+namespace Hippomundo\FileManager;
 
 use Illuminate\Support\Arr;
-use RGilyov\FileManager\Models\File;
-use RGilyov\FileManager\Models\Media;
-use RGilyov\FileManager\Models\Video;
+use Hippomundo\FileManager\Models\File;
+use Hippomundo\FileManager\Models\Media;
+use Hippomundo\FileManager\Models\Video;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class FileManagerHelpers
- * @package RGilyov\FileManager
+ * @package Hippomundo\FileManager
  */
 class FileManagerHelpers
 {

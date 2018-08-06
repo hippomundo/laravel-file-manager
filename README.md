@@ -4,14 +4,14 @@ The best way to upload, store and manage your files.
 ## Installation ##
 
 ```php
-composer require rgilyov/laravel-file-manager
+composer require hippomundo/laravel-file-manager
 ```
 
-Register \RGilyov\CsvImporter\CsvImporterServiceProvider inside `config/app.php`
+Register \Hippomundo\CsvImporter\CsvImporterServiceProvider inside `config/app.php`
 ```php
     'providers' => [
         //...
-        \RGilyov\FileManager\Providers\FileManagerServiceProvider::class,
+        \Hippomundo\FileManager\Providers\FileManagerServiceProvider::class,
     ];
 ```
 
@@ -28,11 +28,11 @@ php artisan migrate
 
 ## Basic usage ##
 
-Before start we need to implement `RGilyov\FileManager\Models\FileManager`
+Before start we need to implement `Hippomundo\FileManager\Models\FileManager`
 trait into your model:
 
 ```
-    use RGilyov\FileManager\Models\FileManager;
+    use Hippomundo\FileManager\Models\FileManager;
 ```
 
 Then we need to declare relationship between
@@ -43,17 +43,17 @@ There are two possible relationships `belongsTo` and `belongsToMany`
 ```
     public function photo()
     {
-        return $this->belongsTo(RGilyov\FileManager\Models\Media::class, 'photo_id');
+        return $this->belongsTo(Hippomundo\FileManager\Models\Media::class, 'photo_id');
     }
     
     public function videos()
     {
-        return $this->belongsToMany(RGilyov\FileManager\Models\Video::class, 'your_models_videos');
+        return $this->belongsToMany(Hippomundo\FileManager\Models\Video::class, 'your_models_videos');
     }
     
     public function file()
     {
-        return $this->belongsTo(RGilyov\FileManager\Models\File::class);
+        return $this->belongsTo(Hippomundo\FileManager\Models\File::class);
     }
 ```
 

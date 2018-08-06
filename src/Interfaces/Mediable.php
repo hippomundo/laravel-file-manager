@@ -1,10 +1,10 @@
 <?php
 
-namespace RGilyov\FileManager\Interfaces;
+namespace Hippomundo\FileManager\Interfaces;
 
 /**
  * Interface Mediable
- * @package RGilyov\FileManager\Interfaces
+ * @package Hippomundo\FileManager\Interfaces
  */
 interface Mediable
 {

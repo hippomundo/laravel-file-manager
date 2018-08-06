@@ -1,10 +1,10 @@
 <?php
 
-namespace RGilyov\FileManager\Exceptions;
+namespace Hippomundo\FileManager\Exceptions;
 
 /**
  * Class FileManagerException
- * @package RGilyov\FileManager
+ * @package Hippomundo\FileManager
  */
 class FileManagerException extends \Exception
 {

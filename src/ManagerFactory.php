@@ -1,18 +1,18 @@
 <?php
 
-namespace RGilyov\FileManager;
+namespace Hippomundo\FileManager;
 
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
-use RGilyov\FileManager\Exceptions\FileManagerException;
-use RGilyov\FileManager\Interfaces\Mediable;
-use RGilyov\FileManager\Models\File;
-use RGilyov\FileManager\Models\Media;
-use RGilyov\FileManager\Models\Video;
+use Hippomundo\FileManager\Exceptions\FileManagerException;
+use Hippomundo\FileManager\Interfaces\Mediable;
+use Hippomundo\FileManager\Models\File;
+use Hippomundo\FileManager\Models\Media;
+use Hippomundo\FileManager\Models\Video;
 
 /**
  * Class Manager
- * @package RGilyov\FileManager
+ * @package Hippomundo\FileManager
  */
 class ManagerFactory
 {

@@ -39,12 +39,12 @@
   },
   "autoload": {
     "psr-4": {
-      "RGilyov\\FileManager\\": "src/"
+      "Hippomundo\\FileManager\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "RGilyov\\FileManager\\Test\\": "tests/"
+      "Hippomundo\\FileManager\\Test\\": "tests/"
     }
   }
 }

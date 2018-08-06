@@ -1,14 +1,14 @@
 <?php
 
-namespace RGilyov\FileManager\Models;
+namespace Hippomundo\FileManager\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use RGilyov\FileManager\Interfaces\Mediable;
-use RGilyov\FileManager\StorageManager;
+use Hippomundo\FileManager\Interfaces\Mediable;
+use Hippomundo\FileManager\StorageManager;
 
 /**
  * Class Video
- * @package RGilyov\FileManager\Models
+ * @package Hippomundo\FileManager\Models
  */
 class Video extends Model implements Mediable
 {

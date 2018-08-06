@@ -1,6 +1,6 @@
 <?php
 
-namespace RGilyov\FileManager\Models;
+namespace Hippomundo\FileManager\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use \Illuminate\Database\Query\Builder as QueryBuilder;
@@ -8,12 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
-use RGilyov\FileManager\Exceptions\FileManagerException;
+use Hippomundo\FileManager\Exceptions\FileManagerException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use RGilyov\FileManager\ManagerFactory;
-use RGilyov\FileManager\ResolvedRelation;
+use Hippomundo\FileManager\ManagerFactory;
+use Hippomundo\FileManager\ResolvedRelation;
 
 /**
  * Class MediaTrait|Model
@@ -358,7 +358,7 @@ trait FileManager
 
     /**
      * @param $relation
-     * @return \RGilyov\FileManager\FileManager|\RGilyov\FileManager\MediaManager|\RGilyov\FileManager\VideoManager
+     * @return \Hippomundo\FileManager\FileManager|\Hippomundo\FileManager\MediaManager|\Hippomundo\FileManager\VideoManager
      * @throws FileManagerException
      */
     protected function getFileManager($relation)

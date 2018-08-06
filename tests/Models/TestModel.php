@@ -1,16 +1,16 @@
 <?php
 
-namespace RGilyov\FileManager\Test\Models;
+namespace Hippomundo\FileManager\Test\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use RGilyov\FileManager\Models\File;
-use RGilyov\FileManager\Models\FileManager;
-use RGilyov\FileManager\Models\Media;
-use RGilyov\FileManager\Models\Video;
+use Hippomundo\FileManager\Models\File;
+use Hippomundo\FileManager\Models\FileManager;
+use Hippomundo\FileManager\Models\Media;
+use Hippomundo\FileManager\Models\Video;
 
 /**
  * Class TestModel
- * @package RGilyov\FileManager\Test\Models
+ * @package Hippomundo\FileManager\Test\Models
  */
 class TestModel extends Model
 {

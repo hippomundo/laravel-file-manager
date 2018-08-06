@@ -1,16 +1,16 @@
 <?php
 
-namespace RGilyov\FileManager\Interfaces;
+namespace Hippomundo\FileManager\Interfaces;
 
 use Illuminate\Database\Eloquent\Model;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use RGilyov\FileManager\Models\File;
-use RGilyov\FileManager\Models\Media;
-use RGilyov\FileManager\Models\Video;
+use Hippomundo\FileManager\Models\File;
+use Hippomundo\FileManager\Models\Media;
+use Hippomundo\FileManager\Models\Video;
 
 /**
  * Interface Manager
- * @package RGilyov\FileManager\Interfaces
+ * @package Hippomundo\FileManager\Interfaces
  */
 interface Manager
 {

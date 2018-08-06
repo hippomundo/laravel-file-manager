@@ -1,6 +1,6 @@
 <?php
 
-namespace RGilyov\FileManager\Test\File;
+namespace Hippomundo\FileManager\Test\File;
 
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\UploadedFile as SymphonyUploadedFile;
