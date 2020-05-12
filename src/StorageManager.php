@@ -88,11 +88,7 @@ class StorageManager
         if (static::isSingleCloudDisk()) {
             static::put($path, $contents);
         } else {
-            if (static::hasBackUpDisk()) {
-                $disk = static::getDisk(static::BACKUP_DISK);
-            } else {
-                $disk = static::getDisk();
-            }
+            $disk = static::getLocalDisk();
 
             $disk->put($path, $contents);
         }
@@ -103,15 +99,23 @@ class StorageManager
      */
     public static function isSingleCloudDisk()
     {
-        return FileManagerHelpers::isCloud() && ! static::hasBackUpDisk();
+        return FileManagerHelpers::isCloud() && FileManagerHelpers::isBackUpDiskCloud();
     }
 
     /**
-     * @return string
+     * @return FilesystemAdapter|null
      */
-    public static function getBackUpDisk()
+    public static function getLocalDisk()
     {
-        return static::$backup_disk;
+        if (! FileManagerHelpers::isCloud()) {
+            return static::getDisk(static::MAIN_DISK);
+        }
+
+        if (static::hasBackUpDisk() && ! FileManagerHelpers::isBackUpDiskCloud()) {
+            return static::getDisk(static::BACKUP_DISK);
+        }
+
+        return null;
     }
 
     /**
@@ -350,7 +354,7 @@ class StorageManager
             return static::url($path);
         }
 
-        return static::hasBackUpDisk() ? static::backUpUrl($path) : static::mainDiskUrl($path);
+        return static::getLocalDisk();
     }
 
     /**
@@ -505,7 +509,7 @@ class StorageManager
             return $path;
         }
 
-        $disk = static::hasBackUpDisk() ? static::getDisk(static::BACKUP_DISK) : static::getDisk();
+        $disk = static::getLocalDisk();
 
         return static::glueParts(static::fullPathPrefix($disk), $path);
     }

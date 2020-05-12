@@ -21,7 +21,26 @@ class FileManagerHelpers
     {
         $disk = static::diskConfigurations();
 
-        $driver = Arr::get($disk, 'driver');
+        return static::isCloudDisk($disk);
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isBackUpDiskCloud()
+    {
+        $disk = static::backUpDiskConfigurations();
+
+        return static::isCloudDisk($disk);
+    }
+
+    /**
+     * @param $driverSettings
+     * @return bool
+     */
+    public static function isCloudDisk($driverSettings)
+    {
+        $driver = Arr::get($driverSettings, 'driver');
 
         return strcasecmp($driver, 'local') !== 0;
     }
