@@ -76,6 +76,9 @@ return [
     |   - 576p25
     |   - 480p30
     |
+    | In order to generate a thumbnail for a video you need to install this:
+    | https://tecadmin.net/install-ffmpeg-on-linux/
+    |
     */
 
     'video' => [

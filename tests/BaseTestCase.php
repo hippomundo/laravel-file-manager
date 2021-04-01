@@ -124,7 +124,7 @@ abstract class BaseTestCase extends TestCase
     }
 
     /**
-     * @return void
+     * @throws \Exception
      */
     public function tearDown()
     {

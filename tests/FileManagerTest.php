@@ -222,10 +222,12 @@ class FileManagerTest extends BaseTestCase
 
         $this->assertTrue(Storage::exists($video->path));
         $this->assertTrue(Storage::exists($video->original_path));
+        $this->assertTrue(Storage::exists($video->thumbnail_path));
 
         $videos->each(function (Video $model) {
             $this->assertTrue(Storage::exists($model->path));
             $this->assertTrue(Storage::exists($model->original_path));
+            $this->assertTrue(Storage::exists($model->thumbnail_path));
         });
 
         /*
@@ -239,6 +241,7 @@ class FileManagerTest extends BaseTestCase
 
         $this->assertTrue(Storage::exists($resizedVideo->path));
         $this->assertTrue(Storage::exists($resizedVideo->original_path));
+        $this->assertTrue(Storage::exists($resizedVideo->thumbnail_path));
 
         $manyVideo = $videos->first();
 
@@ -248,6 +251,7 @@ class FileManagerTest extends BaseTestCase
 
         $this->assertTrue(Storage::exists($resizedManyVideos->path));
         $this->assertTrue(Storage::exists($resizedManyVideos->original_path));
+        $this->assertTrue(Storage::exists($resizedManyVideos->thumbnail_path));
 
         /*
          * Rename files
@@ -258,6 +262,7 @@ class FileManagerTest extends BaseTestCase
 
         $this->assertTrue(Storage::exists($renamedVideo->path));
         $this->assertTrue(Storage::exists($renamedVideo->original_path));
+        $this->assertTrue(Storage::exists($renamedVideo->thumbnail_path));
         $this->assertTrue($resizedVideo->path !== $renamedVideo->path);
 
         $testModel->fileManagerUpdateNames('videos', $manyVideo->id);
@@ -266,6 +271,7 @@ class FileManagerTest extends BaseTestCase
 
         $this->assertTrue(Storage::exists($renamedManyVideo->path));
         $this->assertTrue(Storage::exists($renamedManyVideo->original_path));
+        $this->assertTrue(Storage::exists($renamedManyVideo->thumbnail_path));
         $this->assertTrue($manyVideo->path !== $renamedManyVideo->path);
 
         /*
@@ -277,6 +283,7 @@ class FileManagerTest extends BaseTestCase
 
         $this->assertTrue(Storage::exists($updatedVideo->path));
         $this->assertTrue(Storage::exists($updatedVideo->original_path));
+        $this->assertTrue(Storage::exists($updatedVideo->thumbnail_path));
         $this->assertTrue($updatedVideo->path !== $renamedVideo->path);
 
         /*
@@ -289,6 +296,7 @@ class FileManagerTest extends BaseTestCase
         $this->assertTrue(is_null($deleted));
         $this->assertFalse(Storage::exists($updatedVideo->path));
         $this->assertFalse(Storage::exists($updatedVideo->original_path));
+        $this->assertFalse(Storage::exists($updatedVideo->thumbnail_path));
 
         $testModel->fileManagerDeleteFile('videos', $manyVideo->id);
 
@@ -315,6 +323,7 @@ class FileManagerTest extends BaseTestCase
         $videos->each(function (Video $model) {
             $this->assertTrue(Storage::exists($model->path));
             $this->assertTrue(Storage::exists($model->original_path));
+            $this->assertTrue(Storage::exists($model->thumbnail_path));
         });
 
         /*

@@ -37,18 +37,20 @@ class VideoManager extends BaseManager
      */
     protected function saveFile(UploadedFile $file)
     {
-        $type          = $file->getMimeType();
-        $file_size     = $file->getClientSize();
-        $folder_path   = $this->mainFolder($file);
-        $original_name = StorageManager::originalName($file);
-        $storage       = $this->getStorageName();
-        $extension     = StorageManager::extension($file);
-        $hash          = $this->makeHash($original_name);
-        $original_path = $this->moveOriginal($file);
-        $path          = $this->saveVideo($original_path);
+        $type           = $file->getMimeType();
+        $file_size      = $file->getClientSize();
+        $folder_path    = $this->mainFolder($file);
+        $original_name  = StorageManager::originalName($file);
+        $storage        = $this->getStorageName();
+        $extension      = StorageManager::extension($file);
+        $hash           = $this->makeHash($original_name);
+        $original_path  = $this->moveOriginal($file);
+        $path           = $this->saveVideo($original_path);
+        $thumbnail_path = $this->makeThumbnailPath($path);
 
         return compact(
             'original_path',
+            'thumbnail_path',
             'path',
             'folder_path',
             'original_name',
@@ -100,6 +102,18 @@ class VideoManager extends BaseManager
             StorageManager::getDisk(StorageManager::MAIN_DISK)->put($toPath, StorageManager::get($toPath));
         }
 
+        $thumbnailToPath = $this->makeThumbnailPath($toPath);
+
+        $execThumbnailToPath = StorageManager::originalFullPath($thumbnailToPath);
+
+        $this->makeVideoThumbnail($execFromPath, $execThumbnailToPath);
+
+        if (StorageManager::hasBackUpDisk() && StorageManager::exists($thumbnailToPath)) {
+            $content = StorageManager::get($thumbnailToPath);
+
+            StorageManager::getDisk(StorageManager::MAIN_DISK)->put($thumbnailToPath, $content);
+        }
+
         return $toPath;
     }
 
@@ -109,6 +123,7 @@ class VideoManager extends BaseManager
      * @param $size
      * @return mixed
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \ReflectionException
      */
     protected function resizeOnlyCloud($fromPath, $toPath, $size)
     {
@@ -128,8 +143,31 @@ class VideoManager extends BaseManager
                 StorageManager::deleteTmpFile($tmpToPath);
             }
 
+            $tmpThumbnailToPath = $this->makeThumbnailPath($tmpToPath);
+
+            $execThumbnailToPath = StorageManager::tmpFullPath($tmpThumbnailToPath);
+
+            $this->makeVideoThumbnail($tmp, $execThumbnailToPath);
+
+            if (StorageManager::exists($tmpThumbnailToPath)) {
+                $toThPath = $this->makeThumbnailPath($toPath);
+
+                $this->putFileToPath($toThPath, StorageManager::getTmpDisk()->get($tmpThumbnailToPath));
+
+                StorageManager::deleteTmpFile($tmpThumbnailToPath);
+            }
+
             return $toPath;
         });
+    }
+
+    /**
+     * @param $path
+     * @return string
+     */
+    protected function makeThumbnailPath($path)
+    {
+        return substr($path, 0, strpos($path, '.')) . '.png';
     }
 
     /**
@@ -143,6 +181,20 @@ class VideoManager extends BaseManager
         $exec = "/usr/bin/HandBrakeCLI -O -Z \"Fast {$size}\" -i {$fromPath} -o {$toPath}";
 
         exec($exec, $output, $return_var);
+
+        return $return_var;
+    }
+
+    /**
+     * @param $fromPath
+     * @param $toPath
+     * @return mixed
+     */
+    protected function makeVideoThumbnail($fromPath, $toPath)
+    {
+        $cmd = "/usr/bin/ffmpeg -i {$fromPath} -ss 00:00:01.000 -vframes 1 {$toPath}";
+
+        exec($cmd, $output, $return_var);
 
         return $return_var;
     }
@@ -171,6 +223,7 @@ class VideoManager extends BaseManager
         $path = $model->path;
 
         $model->deleteVideo();
+        $model->deleteThumbnail();
 
         $this->resizeAndSaveVideo($model->original_path, $path, $size);
 
@@ -187,7 +240,7 @@ class VideoManager extends BaseManager
 
         $this->renameFile($model->path, $path);
 
-        $model->update(compact('path', 'url'));
+        $model->update(compact('path'));
 
         return $model;
     }

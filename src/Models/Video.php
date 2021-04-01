@@ -25,6 +25,7 @@ class Video extends Model implements Mediable
         'path',
         'folder_path',
         'original_name',
+        'thumbnail_path',
         'extension',
         'hash',
         'storage',
@@ -61,7 +62,15 @@ class Video extends Model implements Mediable
      */
     public function deleteOriginal()
     {
-        StorageManager::originalUrl($this->original_path);
+        StorageManager::delete($this->original_path);
+    }
+
+    /**
+     * @return void
+     */
+    public function deleteThumbnail()
+    {
+        StorageManager::delete($this->thumbnail_path);
     }
 
     /**
@@ -71,5 +80,6 @@ class Video extends Model implements Mediable
     {
         $this->deleteVideo();
         $this->deleteOriginal();
+        $this->deleteThumbnail();
     }
 }

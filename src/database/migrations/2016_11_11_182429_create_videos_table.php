@@ -19,6 +19,7 @@ class CreateVideosTable extends Migration
                 $table->string('original_path')->nullable();
                 $table->string('path')->nullable();
                 $table->string('folder_path')->nullable();
+                $table->string('thumbnail_path')->nullable();
                 $table->string('original_name')->nullable();
                 $table->string('extension', 20)->nullable();
                 $table->string('hash')->unique('video_hash')->nullable();
